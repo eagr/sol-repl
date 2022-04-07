@@ -1,0 +1,32 @@
+{
+  "name": "sol-repl",
+  "version": "0.0.0",
+  "description": "Solidity REPL",
+  "files": ["dist"],
+  "bin": {
+    "sol": "./bin/index.js"
+  },
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eagr/sol-repl.git"
+  },
+  "keywords": [
+    "solidity",
+    "repl"
+  ],
+  "author": {
+    "name": "Julian Eager",
+    "email": "eagr@tutanota.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/eagr/sol-repl/issues"
+  },
+  "homepage": "https://github.com/eagr/sol-repl#readme",
+  "dependencies": {
+    "solc": "0.8.13",
+    "yargs": "^17.4.0"
+  }
+}
