@@ -1,52 +1,68 @@
 #!/usr/bin/env node
 
+const { ethers } = require('ethers')
+const ganache = require('ganache')
 const yargs = require('yargs')
+const { compile } = require('./compiler')
+const { prompt, printHelp } = require('./repl')
 const pkg = require('../package.json')
 
-const version = pkg.dependencies.solc
-const prompt = () => process.stdout.write('> ')
+ethers.utils.Logger.setLogLevel('OFF')
+const { providers, ContractFactory } = ethers
+const provider = new providers.Web3Provider(ganache.provider({
+    logging: { quiet: true },
+}))
+const signer = provider.getSigner()
 
+const version = pkg.dependencies.solc
 yargs
     .version(version)
     .wrap(yargs.terminalWidth())
     .parse()
+
+const { stdin, stdout } = process
 console.log(`Welcome to Solidity v${version}!`)
 console.log('Type ".help" for more information.')
 prompt()
 
-process.stdin.setEncoding('utf8')
-process.stdin.resume()
-process.stdin.on('data', (inp) => {
+const session = []
+stdin.setEncoding('utf8')
+stdin.resume()
+stdin.on('data', async (inp) => {
     inp = inp.trim().toLowerCase()
-
-    function printHelp () {
-        const help = {
-            '.exit': 'Exit the REPL',
-            '.help': 'Print this message',
-        }
-
-        const kws = Object.keys(help)
-        for (let i = 0; i < kws.length; i++) {
-            const kw = kws[i]
-            console.log(kw.padEnd(12) + help[kw])
-        }
-    }
 
     if (inp.indexOf('.') === 0) {
         switch (inp) {
             case '.exit':
                 process.exit()
-                break
             case '.help':
                 printHelp()
                 prompt()
                 break
             default:
-                console.log('Invalid REPL keyword')
+                stdout.write('Invalid REPL keyword\n')
                 prompt()
                 break
         }
     } else {
+        session.push(inp)
+        const [err, out] = compile(session)
+        if (err) {
+            session.pop()
+            console.error(err)
+            prompt()
+        } else {
+            const factory = ContractFactory.fromSolidity(out, signer)
+            const contract = await factory.deploy()
+            await contract.deployTransaction.wait()
+            const rawRes = await contract.f()
 
+            let res
+            if (rawRes._isBigNumber) {
+                res = rawRes.toNumber()
+            }
+            console.log(res)
+            prompt()
+        }
     }
 })

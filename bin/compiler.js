@@ -4,13 +4,21 @@ const SRC = 'main.sol'
 const CON = 'Main'
 
 function sol (session, retType) {
-    const last = session.length - 1
+    const last = session[session.length - 1]
+    let ret = last + ';'
+    const matches = last.match(/^uint\s*(\w+)\s*=.+/)
+    if (matches) {
+        ret = `${matches[1]};`
+    }
+    ret = 'return ' + ret
+
     return `
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 contract ${CON} {
     function f() external pure returns (${retType}) {
-        ${session.slice(0, last).join(';\n')}return ${session[last]};
+${session.join(';\n')};
+${ret}
     }
 }`
 }
@@ -43,7 +51,7 @@ function compile (session) {
     }
 
     let res = trial(session)
-    if (res.errors) {
+    if (res.errors && res.errors[0].severity === 'error') {
         const err = res.errors[0]
         const rt = getRetType(err.message)
         if (rt) {
@@ -51,7 +59,7 @@ function compile (session) {
             res = trial(session, rt)
         }
     }
-    if (res.errors) {
+    if (res.errors && res.errors[0].severity === 'error') {
         return [res.errors[0], null]
     } else {
         return [null, res.contracts[SRC][CON]]
