@@ -57,7 +57,7 @@ stdin.on('data', async (inp) => {
             await contract.deployTransaction.wait()
             const rawRes = await contract.f()
 
-            let res
+            let res = rawRes
             if (rawRes._isBigNumber) {
                 res = rawRes.toNumber()
             }

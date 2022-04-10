@@ -6,7 +6,7 @@ const CON = 'Main'
 function sol (session, retType) {
     const last = session[session.length - 1]
     let ret = last + ';'
-    const matches = last.match(/^uint\s*(\w+)\s*=.+/)
+    const matches = last.match(/^uint\s+(\w+)\s*=.+/)
     if (matches) {
         ret = `${matches[1]};`
     }
@@ -24,9 +24,9 @@ ${ret}
 }
 
 function getRetType (msg) {
-    const matches = msg.match(/^Return argument type (\w+)_\w+/)
+    const matches = msg.match(/^Return argument type (\w+)/)
     if (matches) {
-        let rt = matches[1]
+        let rt = matches[1].match(/bool|int|string|address/)[0]
         if (rt === 'string') rt += ' memory'
         return rt
     }
