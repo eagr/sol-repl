@@ -16,7 +16,7 @@ function sol (session, retType) {
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 contract ${CON} {
-    function f() external pure returns (${retType}) {
+    function exec() external view returns (${retType}) {
 ${session.join(';\n')};
 ${ret}
     }
@@ -35,7 +35,7 @@ function getRetType (msg) {
 
 function compile (session) {
     function trial (session, retType) {
-        retType = retType || 'uint'
+        retType = retType || 'int'
         const src = sol(session, retType)
         const inp = JSON.stringify({
             language: 'Solidity',

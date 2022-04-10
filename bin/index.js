@@ -53,9 +53,9 @@ stdin.on('data', async (inp) => {
             prompt()
         } else {
             const factory = ContractFactory.fromSolidity(out, signer)
-            const contract = await factory.deploy()
-            await contract.deployTransaction.wait()
-            const rawRes = await contract.f()
+            const snippets = await factory.deploy()
+            await snippets.deployTransaction.wait()
+            const rawRes = await snippets.exec()
 
             let res = rawRes
             if (rawRes._isBigNumber) {
