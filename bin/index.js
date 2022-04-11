@@ -59,7 +59,7 @@ stdin.on('data', async (inp) => {
 
             let res = rawRes
             if (rawRes._isBigNumber) {
-                res = rawRes.toNumber()
+                res = rawRes.toString()
             }
             console.log(res)
             prompt()
