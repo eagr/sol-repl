@@ -4,7 +4,7 @@ const { ethers } = require('ethers')
 const ganache = require('ganache')
 const yargs = require('yargs')
 const { compile } = require('./compiler')
-const { prompt, printHelp } = require('./repl')
+const { prompt, printHelp, formatSession } = require('./repl')
 const pkg = require('../package.json')
 
 ethers.utils.Logger.setLogLevel('OFF')
@@ -37,6 +37,10 @@ stdin.on('data', async (inp) => {
                 process.exit()
             case '.help':
                 printHelp()
+                prompt()
+                break
+            case '.session':
+                console.log(formatSession(session))
                 prompt()
                 break
             default:
