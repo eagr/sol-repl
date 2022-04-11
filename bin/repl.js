@@ -25,8 +25,15 @@ function formatSession (session) {
     return out.join('\n')
 }
 
+function toPrintable (x) {
+    if (x._isBigNumber) return x.toString()
+    if (typeof x === 'string') return JSON.stringify(x)
+    return x
+}
+
 module.exports = {
     prompt,
     printHelp,
     formatSession,
+    toPrintable,
 }

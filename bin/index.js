@@ -4,7 +4,7 @@ const { ethers } = require('ethers')
 const ganache = require('ganache')
 const yargs = require('yargs')
 const { compile } = require('./compiler')
-const { prompt, printHelp, formatSession } = require('./repl')
+const { prompt, printHelp, formatSession, toPrintable } = require('./repl')
 const pkg = require('../package.json')
 
 ethers.utils.Logger.setLogLevel('OFF')
@@ -39,15 +39,12 @@ stdin.on('data', async (inp) => {
                 process.exit()
             case '.help':
                 printHelp()
-                prompt()
                 break
             case '.session':
                 console.log(formatSession(session))
-                prompt()
                 break
             default:
                 stdout.write('Invalid REPL keyword\n')
-                prompt()
                 break
         }
     } else {
@@ -56,19 +53,13 @@ stdin.on('data', async (inp) => {
         if (err) {
             session.pop()
             console.error(err)
-            prompt()
         } else {
             const factory = ContractFactory.fromSolidity(out, signer)
             const snippets = await factory.deploy()
             await snippets.deployTransaction.wait()
             const rawRes = await snippets.exec()
-
-            let res = rawRes
-            if (rawRes._isBigNumber) {
-                res = rawRes.toString()
-            }
-            console.log(res)
-            prompt()
+            console.log(toPrintable(rawRes))
         }
     }
+    prompt()
 })
