@@ -30,6 +30,8 @@ stdin.setEncoding('utf8')
 stdin.resume()
 stdin.on('data', async (inp) => {
     inp = inp.trim()
+    if (inp === '') return prompt()
+
     if (/^\.[A-Za-z]+$/.test(inp)) {
         inp = inp.toLowerCase()
         switch (inp) {
