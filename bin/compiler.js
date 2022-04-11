@@ -3,14 +3,26 @@ const solc = require('solc')
 const SRC = 'main.sol'
 const CON = 'Main'
 
+const P_INT = 'int(?:256|128|64|32|16|8)|int'
+const P_UINT = 'uint(?:256|128|64|32|16|8)|uint'
+const P_TYPE = `bool\
+|(?:${P_INT})(?:\\[\\d*\\])?\
+|(?:${P_UINT})(?:\\[\\d*\\])?\
+|ufixed|fixed\
+|address payable|address\
+|bytes(?:3[0-2]|2\\d|1\\d|[1-9])\
+|bytes (memory|storage)\
+|string (memory|storage)`
+
+const R_ASSIGN = new RegExp(`^(?:${P_TYPE})\\s+(?<ident>\\w+)\\s*=\\s*(?<val>.+);?$`)
+
 function sol (session, retType) {
     const last = session[session.length - 1]
-    let ret = last + ';'
-    const matches = last.match(/^uint\s+(\w+)\s*=.+/)
-    if (matches) {
-        ret = `${matches[1]};`
-    }
-    ret = 'return ' + ret
+    let ret = last
+
+    const assign = last.match(R_ASSIGN)
+    if (assign) ret = `${assign.groups['ident']}`
+    ret = 'return ' + ret + ';'
 
     return `
 // SPDX-License-Identifier: UNLICENSED
