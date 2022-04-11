@@ -29,9 +29,9 @@ const session = []
 stdin.setEncoding('utf8')
 stdin.resume()
 stdin.on('data', async (inp) => {
-    inp = inp.trim().toLowerCase()
-
-    if (inp.indexOf('.') === 0) {
+    inp = inp.trim()
+    if (/^\.[A-Za-z]+$/.test(inp)) {
+        inp = inp.toLowerCase()
         switch (inp) {
             case '.exit':
                 process.exit()
