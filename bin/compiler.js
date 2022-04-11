@@ -16,7 +16,7 @@ function sol (session, retType) {
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 contract ${CON} {
-    function exec() external view returns (${retType}) {
+    function exec() public view returns (${retType}) {
 ${session.join(';\n')};
 ${ret}
     }
@@ -26,8 +26,8 @@ ${ret}
 function getRetType (msg) {
     const matches = msg.match(/^Return argument type (\w+)/)
     if (matches) {
-        let rt = matches[1].match(/bool|int|string|address/)[0]
-        if (rt === 'string') rt += ' memory'
+        let rt = matches[1].match(/bool|uint\d{1,3}|int|string|address|bytes\d{1,2}|bytes/)[0]
+        if (rt === 'string' || rt === 'bytes') rt += ' memory'
         return rt
     }
     return ''
