@@ -16,15 +16,6 @@ function printHelp () {
     }
 }
 
-function formatSession (session) {
-    const out = session.map((stmt) => {
-        const end = stmt[stmt.length - 1]
-        if (end !== '}' && end !== ';') stmt += ';'
-        return stmt
-    })
-    return out.join('\n')
-}
-
 function toPrintable (x) {
     if (x._isBigNumber) return x.toString()
     if (typeof x === 'string') {
@@ -41,6 +32,5 @@ function toPrintable (x) {
 module.exports = {
     prompt,
     printHelp,
-    formatSession,
     toPrintable,
 }
