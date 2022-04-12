@@ -3,25 +3,27 @@ const solc = require('solc')
 const SRC = 'main.sol'
 const CON = 'Main'
 
-const P_INT = 'int(?:256|128|64|32|16|8)|int'
-const P_UINT = 'uint(?:256|128|64|32|16|8)|uint'
-const P_TYPE = `bool\
-|(?:${P_INT})(?:\\[\\d*\\])?\
-|(?:${P_UINT})(?:\\[\\d*\\])?\
-|ufixed|fixed\
-|address payable|address\
-|bytes(?:3[0-2]|2\\d|1\\d|[1-9])\
-|bytes (memory|storage)\
-|string (memory|storage)`
+const P_BYTES = 'bytes(?:3[0-2]|2\\d|1\\d|[1-9])?'
+const P_UINT = 'uint(?:256|128|64|32|16|8)?'
+const P_INT = 'int(?:256|128|64|32|16|8)?'
+const P_TYPE = `${P_BYTES}|${P_UINT}|${P_INT}|bool|address payable|address|string|ufixed|fixed`
 
-const R_ASSIGN = new RegExp(`^(?:${P_TYPE})\\s+(?<ident>\\w+)\\s*=\\s*(?<val>.+);?$`)
+const P_ARR = '\\[\\d*\\]'
+const P_LOC = `calldata|memory|storage`
+const P_TYPE_ARR = `(?:${P_TYPE})(?:${P_ARR})?`
+const P_TYPE_ARR_LOC = `(?:${P_TYPE})(?:${P_ARR})?(?: (?:${P_LOC}))?`
+
+const P_ASSIGN = `^${P_TYPE_ARR_LOC}\\s+(?<ident>\\w+)\\s*=\\s*(?<val>.+);?$`
+const P_DECL = `^${P_TYPE_ARR_LOC}\\s+(?<ident>\\w+);?$`
 
 function sol (session, retType) {
     const last = session[session.length - 1]
     let ret = last
 
-    const assign = last.match(R_ASSIGN)
+    const assign = last.match(new RegExp(P_ASSIGN))
     if (assign) ret = `${assign.groups['ident']}`
+    const decl = last.match(new RegExp(P_DECL))
+    if (decl) ret = `${decl.groups['ident']}`
     ret = 'return ' + ret + ';'
 
     return `
