@@ -31,6 +31,10 @@ function toPrintable (x) {
         if (x.indexOf('0x' === 0)) return x
         return JSON.stringify(x)
     }
+    if (Array.isArray(x)) {
+        x = x.map(toPrintable)
+        return '[' + x.join(', ') + ']'
+    }
     return x
 }
 
