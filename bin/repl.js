@@ -27,7 +27,10 @@ function formatSession (session) {
 
 function toPrintable (x) {
     if (x._isBigNumber) return x.toString()
-    if (typeof x === 'string') return JSON.stringify(x)
+    if (typeof x === 'string') {
+        if (x.indexOf('0x' === 0)) return x
+        return JSON.stringify(x)
+    }
     return x
 }
 
