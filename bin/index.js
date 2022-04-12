@@ -4,7 +4,7 @@ const { ethers } = require('ethers')
 const ganache = require('ganache')
 const yargs = require('yargs')
 const { compile } = require('./compiler')
-const { prompt, printHelp, toPrintable } = require('./repl')
+const { prompt, help, toPrintable } = require('./repl')
 const pkg = require('../package.json')
 
 ethers.utils.Logger.setLogLevel('OFF')
@@ -38,7 +38,7 @@ stdin.on('data', async (inp) => {
             case '.exit':
                 process.exit()
             case '.help':
-                printHelp()
+                help()
                 break
             case '.session':
                 console.log(session.join('\n'))
