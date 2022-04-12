@@ -38,10 +38,12 @@ ${ret}
 }
 
 function getRetType (msg) {
-    const matches = msg.match(/^Return argument type (\w+)/)
+    const matches = msg.match(new RegExp(`^Return argument type ([\\w\\d\\[\\]]+ (?:${P_LOC})?)`))
     if (matches) {
-        let rt = matches[1].match(/bool|uint\d{1,3}|int|string|address|bytes\d{1,2}|bytes/)[0]
-        if (rt === 'string' || rt === 'bytes') rt += ' memory'
+        let rt = matches[1].match(new RegExp(P_TYPE_ARR))[0]
+        const rl = matches[1].match(/calldata|memory/)
+        if (rl) rt += ' ' + rl[0]
+        if (/\]$/.test(rt) || rt === 'string') rt += ' memory'
         return rt
     }
     return ''
