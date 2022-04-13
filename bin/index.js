@@ -20,9 +20,7 @@ const provider = new providers.Web3Provider(ganache.provider({
 }))
 const signer = provider.getSigner()
 
-let input = ''
 const session = []
-
 async function exec (inp) {
     inp = inp.trim()
     if (inp === '') return
@@ -39,7 +37,7 @@ async function exec (inp) {
                 console.log(session.join('\n'))
                 break
             default:
-                stdout.write('Invalid REPL keyword\n')
+                console.log('Invalid REPL command')
                 break
         }
     } else {
@@ -58,22 +56,44 @@ async function exec (inp) {
     }
 }
 
-const ENTER = '\u000D'
 const { stdin, stdout } = process
-
 stdin.setRawMode(true)
 stdin.setEncoding('utf8')
 stdin.resume()
+
+const ETX = '\u0003'
+const EOT = '\u0004'
+const RET = '\u000D'
+
+let wantOut = false
+let buffer = ''
+
 stdin.on('data', async (key) => {
-    if (key === ENTER) {
+    if (key === EOT) process.exit()
+
+    if (key === ETX) {
+        if (wantOut) process.exit()
+        if (buffer === '') {
+            console.log('\n(To exit, press Ctrl+C again or Ctrl+D or type .exit)')
+            wantOut = true
+            return prompt()
+        }
+
+        buffer = ''
         stdout.write('\n')
-        await exec(input)
-        input = ''
+        return prompt()
+    }
+    wantOut = false
+
+    if (key === RET) {
+        stdout.write('\n')
+        await exec(buffer)
+        buffer = ''
         return prompt()
     }
 
+    buffer += key
     stdout.write(key)
-    input += key
 })
 
 console.log(`Welcome to Solidity v${version}!`)
