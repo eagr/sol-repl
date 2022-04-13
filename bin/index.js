@@ -21,10 +21,12 @@ const provider = new providers.Web3Provider(ganache.provider({
 const signer = provider.getSigner()
 
 const session = []
+const history = []
 async function exec (inp) {
-    inp = inp.trim()
-    if (inp === '') return
+    if (/^\s*$/.test(inp)) return
+    history.push(inp)
 
+    inp = inp.trim()
     if (/^\.[A-Za-z]+$/.test(inp)) {
         inp = inp.toLowerCase()
         switch (inp) {
@@ -74,6 +76,7 @@ const LEFT = '\u001B\u005B\u0044'
 let wantOut = false
 let buffer = ''
 let cursorPos = 2
+let historyPtr = history.length
 
 stdin.on('data', async (key) => {
     function setBuffer (buf) {
@@ -107,13 +110,6 @@ stdin.on('data', async (key) => {
         return setLine(buffer)
     }
 
-    if (key === RET) {
-        stdout.write('\n')
-        await exec(buffer)
-        setBuffer('')
-        return prompt()
-    }
-
     if (key === LEFT) {
         cursorPos = Math.max(2, cursorPos - 1)
         return stdout.cursorTo(cursorPos)
@@ -123,10 +119,22 @@ stdin.on('data', async (key) => {
         return stdout.cursorTo(cursorPos)
     }
     if (key === UP) {
-        return
+        historyPtr = Math.max(0, historyPtr - 1)
+        setBuffer(history[historyPtr] || '')
+        return setLine(buffer)
     }
     if (key === DOWN) {
-        return
+        historyPtr = Math.min(historyPtr + 1, history.length)
+        setBuffer(history[historyPtr] || '')
+        return setLine(buffer)
+    }
+
+    if (key === RET) {
+        stdout.write('\n')
+        await exec(buffer)
+        historyPtr = history.length
+        setBuffer('')
+        return prompt()
     }
 
     setBuffer(buffer + key)
