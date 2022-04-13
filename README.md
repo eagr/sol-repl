@@ -5,7 +5,8 @@ Solidity REPL (WIP)
 ## Features
 
 * [x] Node-like REPL interactions
-* [ ] history traversing
+* [x] history traversing
+* [ ] history filtering
 
 ## Usage
 
