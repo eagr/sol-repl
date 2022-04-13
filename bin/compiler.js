@@ -17,21 +17,36 @@ const P_ASSIGN = `^${P_TYPE_ARR_LOC}\\s+(?<ident>\\w+)\\s*=\\s*(?<val>.+);?$`
 const P_DECL = `^${P_TYPE_ARR_LOC}\\s+(?<ident>\\w+);?$`
 
 function sol (session, retType) {
-    const last = session[session.length - 1]
+    const fns = []
+    const exps = []
+    for (let i = 0; i < session.length; i++) {
+        const s = session[i]
+        if (/^function/.test(s)) {
+            fns.push(s)
+        } else {
+            exps.push(s)
+        }
+    }
+
+    const last = exps[exps.length - 1] || ''
     let ret = last
 
     const assign = last.match(new RegExp(P_ASSIGN))
     if (assign) ret = `${assign.groups['ident']}`
     const decl = last.match(new RegExp(P_DECL))
     if (decl) ret = `${decl.groups['ident']}`
-    ret = 'return ' + ret + ';'
+    ret = ret && ('return ' + ret + ';')
 
     return `
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 contract ${CON} {
+${fns.join('\n')}
     function exec() public view returns (${retType}) {
-${session.join(';\n')};
+${exps.map((e) => {
+    if (/}$/.test(e)) return e
+    return e + ';'
+}).join('\n')}
 ${ret}
     }
 }`
@@ -50,9 +65,9 @@ function getRetType (msg) {
 }
 
 function compile (session) {
-    function trial (session, retType) {
+    function trial (sess, retType) {
         retType = retType || 'int'
-        const src = sol(session, retType)
+        const src = sol(sess, retType)
         const inp = JSON.stringify({
             language: 'Solidity',
             sources: { [SRC]: { content: src } },

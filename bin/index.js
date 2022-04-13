@@ -44,7 +44,7 @@ async function exec (inp) {
         }
     } else {
         session.push(inp)
-        const [err, out] = compile(session)
+        const [err, out] = compile(session.slice())
         if (err) {
             session.pop()
             console.error(err)
