@@ -81,6 +81,7 @@ function compile (session) {
         return out
     }
 
+    // first trial is for determining return type
     let res = trial(session)
     if (res.errors && res.errors[0].severity === 'error') {
         const err = res.errors[0]
