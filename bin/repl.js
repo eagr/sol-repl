@@ -1,5 +1,13 @@
+const PROMPT = '> '
 function prompt () {
-    process.stdout.write('> ')
+    process.stdout.write(PROMPT)
+}
+
+function setLine (ln) {
+    const stdout = process.stdout
+    stdout.cursorTo(PROMPT.length)
+    stdout.clearLine(1)
+    stdout.write(ln)
 }
 
 function help () {
@@ -31,6 +39,7 @@ function toPrintable (x) {
 
 module.exports = {
     prompt,
+    setLine,
     help,
     toPrintable,
 }

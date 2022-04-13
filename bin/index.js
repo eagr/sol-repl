@@ -4,7 +4,7 @@ const yargs = require('yargs')
 const { ethers } = require('ethers')
 const ganache = require('ganache')
 const { compile } = require('./compiler')
-const { prompt, help, toPrintable } = require('./repl')
+const { prompt, setLine, help, toPrintable } = require('./repl')
 const pkg = require('../package.json')
 
 const version = pkg.dependencies.solc
@@ -64,6 +64,7 @@ stdin.resume()
 const ETX = '\u0003'
 const EOT = '\u0004'
 const RET = '\u000D'
+const NAK = '\u0015'
 const DEL = '\u007F'
 
 let wantOut = false
@@ -86,12 +87,14 @@ stdin.on('data', async (key) => {
     }
     wantOut = false
 
+    if (key === NAK) {
+        buffer = ''
+        return setLine(buffer)
+    }
+
     if (key === DEL) {
         buffer = buffer.slice(0, buffer.length - 1)
-        stdout.cursorTo(2)
-        stdout.clearLine(1)
-        stdout.write(buffer)
-        return
+        return setLine(buffer)
     }
 
     if (key === RET) {
