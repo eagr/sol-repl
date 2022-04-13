@@ -64,6 +64,7 @@ stdin.resume()
 const ETX = '\u0003'
 const EOT = '\u0004'
 const RET = '\u000D'
+const DEL = '\u007F'
 
 let wantOut = false
 let buffer = ''
@@ -84,6 +85,14 @@ stdin.on('data', async (key) => {
         return prompt()
     }
     wantOut = false
+
+    if (key === DEL) {
+        buffer = buffer.slice(0, buffer.length - 1)
+        stdout.cursorTo(2)
+        stdout.clearLine(1)
+        stdout.write(buffer)
+        return
+    }
 
     if (key === RET) {
         stdout.write('\n')
