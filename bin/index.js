@@ -20,6 +20,7 @@ const provider = new providers.Web3Provider(ganache.provider({
 }))
 const signer = provider.getSigner()
 
+let input = ''
 const session = []
 
 async function exec (inp) {
@@ -57,12 +58,22 @@ async function exec (inp) {
     }
 }
 
+const ENTER = '\u000D'
 const { stdin, stdout } = process
+
+stdin.setRawMode(true)
 stdin.setEncoding('utf8')
 stdin.resume()
-stdin.on('data', async (inp) => {
-    await exec(inp)
-    prompt()
+stdin.on('data', async (key) => {
+    if (key === ENTER) {
+        stdout.write('\n')
+        await exec(input)
+        input = ''
+        return prompt()
+    }
+
+    stdout.write(key)
+    input += key
 })
 
 console.log(`Welcome to Solidity v${version}!`)
