@@ -2,6 +2,11 @@
 
 Solidity REPL (WIP)
 
+## Features
+
+* [x] Node-like REPL interactions
+* [ ] history traversing
+
 ## Usage
 
 **Install**
@@ -10,8 +15,9 @@ Solidity REPL (WIP)
 npm i -g sol-repl
 ```
 
+**run**
+
 ```sh
-# run
 $ sol
 Welcome to Solidity v0.8.13!
 Type ".help" for more information.
