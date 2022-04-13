@@ -66,11 +66,21 @@ const EOT = '\u0004'
 const RET = '\u000D'
 const NAK = '\u0015'
 const DEL = '\u007F'
+const UP = '\u001B\u005B\u0041'
+const DOWN = '\u001B\u005B\u0042'
+const RIGHT = '\u001B\u005B\u0043'
+const LEFT = '\u001B\u005B\u0044'
 
 let wantOut = false
 let buffer = ''
+let cursorPos = 2
 
 stdin.on('data', async (key) => {
+    function setBuffer (buf) {
+        buffer = buf
+        cursorPos = buffer.length + 2
+    }
+
     if (key === EOT) process.exit()
 
     if (key === ETX) {
@@ -81,30 +91,45 @@ stdin.on('data', async (key) => {
             return prompt()
         }
 
-        buffer = ''
+        setBuffer('')
         stdout.write('\n')
         return prompt()
     }
     wantOut = false
 
     if (key === NAK) {
-        buffer = ''
+        setBuffer('')
         return setLine(buffer)
     }
 
     if (key === DEL) {
-        buffer = buffer.slice(0, buffer.length - 1)
+        setBuffer(buffer.slice(0, buffer.length - 1))
         return setLine(buffer)
     }
 
     if (key === RET) {
         stdout.write('\n')
         await exec(buffer)
-        buffer = ''
+        setBuffer('')
         return prompt()
     }
 
-    buffer += key
+    if (key === LEFT) {
+        cursorPos = Math.max(2, cursorPos - 1)
+        return stdout.cursorTo(cursorPos)
+    }
+    if (key === RIGHT) {
+        cursorPos = Math.min(cursorPos + 1, buffer.length + 2)
+        return stdout.cursorTo(cursorPos)
+    }
+    if (key === UP) {
+        return
+    }
+    if (key === DOWN) {
+        return
+    }
+
+    setBuffer(buffer + key)
     stdout.write(key)
 })
 
