@@ -17,11 +17,14 @@ const P_ASSIGN = `^${P_TYPE_ARR_LOC}\\s+(?<ident>\\w+)\\s*=\\s*(?<val>.+);?$`
 const P_DECL = `^${P_TYPE_ARR_LOC}\\s+(?<ident>\\w+);?$`
 
 function sol (session, retType) {
+    const cns = []
     const fns = []
     const exps = []
     for (let i = 0; i < session.length; i++) {
         const s = session[i]
-        if (/^function/.test(s)) {
+        if (/^contract/.test(s)) {
+            cns.push(s)
+        } else if (/^function/.test(s)) {
             fns.push(s)
         } else {
             exps.push(s)
@@ -40,6 +43,7 @@ function sol (session, retType) {
     return `
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
+${cns.join('\n')}
 contract ${CON} {
 ${fns.join('\n')}
     function exec() public view returns (${retType}) {

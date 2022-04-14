@@ -5,8 +5,8 @@ Solidity REPL (WIP)
 ## Features
 
 * language
-  * [x] function declarations
-  * [ ] contract declarations
+  * [x] contract
+  * [x] function
 * REPL
   * [x] Node-like REPL interactions
   * [x] history traversing
