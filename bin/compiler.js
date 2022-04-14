@@ -43,19 +43,23 @@ function sol (session, retType) {
     ret = ret && ('return ' + ret + ';')
 
     return `
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.0;
-${cns.join('\n')}
-contract ${CON} {
-${fns.join('\n')}
-    function exec() public view returns (${retType}) {
-${exps.map((e) => {
-    if (/}$/.test(e)) return e
-    return e + ';'
-}).join('\n')}
-${ret}
-    }
-}`
+    // SPDX-License-Identifier: UNLICENSED
+    pragma solidity ^0.8.0;
+
+    ${cns.join('\n')}
+
+    contract ${CON} {
+        ${fns.join('\n')}
+
+        function exec() public view returns (${retType}) {
+            ${exps.map((e) => {
+                if (/}$/.test(e)) return e
+                return e + ';'
+            }).join('\n')}
+
+            ${ret}
+        }
+    }`
 }
 
 function getRetType (msg) {

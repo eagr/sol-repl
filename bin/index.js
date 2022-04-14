@@ -3,6 +3,7 @@
 const yargs = require('yargs')
 const { ethers } = require('ethers')
 const ganache = require('ganache')
+const prettier = require('prettier')
 const { compile } = require('./compiler')
 const { prompt, setLine, help, toPrintable } = require('./repl')
 const pkg = require('../package.json')
@@ -37,7 +38,12 @@ async function exec (inp) {
                 help()
                 break
             case '.session':
-                console.log(session.join('\n'))
+                console.log(prettier.format(src, {
+                    filepath: '*.sol',
+                    tabWidth: 2,
+                    useTabs: false,
+                    explicitTypes: 'preserve',
+                }))
                 break
             default:
                 console.log('Invalid REPL command')

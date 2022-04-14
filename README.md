@@ -11,8 +11,8 @@ Solidity REPL (WIP)
   * [ ] mapping
   * [ ] import
 * REPL
-  * [x] Node-like REPL interactions
-  * [ ] `.session` for printing Solidity source code
+  * [x] Node-like REPL interactions: Ctrl-C, Ctrl-D, Ctrl-U, ...
+  * [x] `.session` print formatted Solidity source
   * [x] history traversing
   * [ ] history filtering
 

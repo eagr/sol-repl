@@ -14,7 +14,7 @@ function help () {
     const info = {
         '.exit': 'Exit the REPL',
         '.help': 'Print this message',
-        '.session': 'Print all evaluated statements of current session'
+        '.session': 'Print current session',
     }
 
     const commands = Object.keys(info)
