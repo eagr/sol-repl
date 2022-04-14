@@ -5,8 +5,8 @@ Solidity REPL (WIP)
 ## Features
 
 * language
-  * [x] contract
   * [x] function
+  * [ ] contract
   * [ ] struct
   * [ ] mapping
   * [ ] import

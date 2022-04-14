@@ -13,15 +13,19 @@ const P_LOC = `calldata|memory|storage`
 const P_TYPE_ARR = `(?:${P_TYPE})(?:${P_ARR})?`
 const P_TYPE_ARR_LOC = `(?:${P_TYPE})(?:${P_ARR})?(?: (?:${P_LOC}))?`
 
-const P_ASSIGN = `^${P_TYPE_ARR_LOC}\\s+(?<ident>\\w+)\\s*=\\s*(?<val>.+);?$`
+const P_ASSIGN = `^(?:${P_TYPE_ARR_LOC}|\\w+)\\s+(?<ident>\\w+)\\s*=\\s*(?<val>.+);?$`
 const P_DECL = `^${P_TYPE_ARR_LOC}\\s+(?<ident>\\w+);?$`
 
 function sol (session, retType) {
     retType = retType || 'int'
+    const isContract = retType.indexOf('contract ') === 0
+    retType = isContract ? retType.substring('contract '.length) : retType
 
     const cns = []
     const fns = []
     const exps = []
+    let mayMutate = false
+
     for (let i = 0; i < session.length; i++) {
         const s = session[i]
         if (/^contract/.test(s)) {
@@ -30,6 +34,7 @@ function sol (session, retType) {
             fns.push(s)
         } else {
             exps.push(s)
+            if (/=\s*new/.test(s)) mayMutate = true
         }
     }
 
@@ -47,7 +52,8 @@ function sol (session, retType) {
             ret = `${decl.groups['ident']}`
         }
         ret = 'return ' + ret + ';'
-        retSign = 'view returns (' + retType + ')'
+        const mut = mayMutate ? '' : 'view'
+        retSign = mut + ' returns (' + retType + ')'
     }
 
     return `
@@ -71,10 +77,14 @@ function sol (session, retType) {
 }
 
 function getRetType (msg) {
-    const matches = msg.match(new RegExp(`^Return argument type ([\\w\\d\\[\\]]+ (?:${P_LOC})?)`))
+    const matches = msg.match(new RegExp(`^Return argument type (contract \\w+|[\\w\\d\\[\\]]+ (?:${P_LOC})?)`))
     if (matches) {
-        let rt = matches[1].match(new RegExp(P_TYPE_ARR))[0]
-        const rl = matches[1].match(/calldata|memory/)
+        let rt = ''
+        const cap = matches[1]
+        if (cap.indexOf('contract ') === 0) rt = cap
+        rt = rt || cap.match(new RegExp(P_TYPE_ARR))[0]
+
+        const rl = cap.match(/calldata|memory/)
         if (rl) rt += ' ' + rl[0]
         if (/\]$/.test(rt) || rt === 'string') rt += ' memory'
         return rt
