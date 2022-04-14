@@ -61,6 +61,8 @@ async function exec (inp) {
             const snippets = await factory.deploy()
             await snippets.deployTransaction.wait()
             const rawRes = await snippets.exec()
+
+            if (typeof rawRes.wait === 'function') return
             console.log(toPrintable(rawRes))
         }
     }

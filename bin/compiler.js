@@ -33,14 +33,22 @@ function sol (session, retType) {
         }
     }
 
-    const last = exps[exps.length - 1] || ''
-    let ret = last
+    const last = session[session.length - 1] || ''
+    const endsWithExp = exps.indexOf(last) >= 0
+    let ret = endsWithExp ? last : ''
+    let retSign = ''
 
-    const assign = last.match(new RegExp(P_ASSIGN))
-    if (assign) ret = `${assign.groups['ident']}`
-    const decl = last.match(new RegExp(P_DECL))
-    if (decl) ret = `${decl.groups['ident']}`
-    ret = ret && ('return ' + ret + ';')
+    if (ret) {
+        let assign = null
+        let decl = null
+        if (assign = last.match(new RegExp(P_ASSIGN))) {
+            ret = `${assign.groups['ident']}`
+        } else if (decl = last.match(new RegExp(P_DECL))) {
+            ret = `${decl.groups['ident']}`
+        }
+        ret = 'return ' + ret + ';'
+        retSign = 'view returns (' + retType + ')'
+    }
 
     return `
     // SPDX-License-Identifier: UNLICENSED
@@ -51,7 +59,7 @@ function sol (session, retType) {
     contract ${CON} {
         ${fns.join('\n')}
 
-        function exec() public view returns (${retType}) {
+        function exec() public ${retSign} {
             ${exps.map((e) => {
                 if (/}$/.test(e)) return e
                 return e + ';'
