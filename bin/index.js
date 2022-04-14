@@ -24,6 +24,8 @@ const signer = provider.getSigner()
 const session = []
 const history = []
 let src = ''
+let invalidSrc = ''
+
 async function exec (inp) {
     if (/^\s*$/.test(inp)) return
     history.push(inp)
@@ -45,19 +47,24 @@ async function exec (inp) {
                     explicitTypes: 'preserve',
                 }))
                 break
+            case '.invalid':
+                console.log(invalidSrc)
+                break
             default:
                 console.log('Invalid REPL command')
                 break
         }
     } else {
         session.push(inp)
-        const [err, res] = compile(session.slice())
+        const comp = compile(session.slice())
+        const [err, out] = comp.res
         if (err) {
+            invalidSrc = comp.src
             session.pop()
             console.error(err)
         } else {
-            src = res.src
-            const factory = ContractFactory.fromSolidity(res.out, signer)
+            src = comp.src
+            const factory = ContractFactory.fromSolidity(out, signer)
             const snippets = await factory.deploy()
             await snippets.deployTransaction.wait()
             const rawRes = await snippets.exec()

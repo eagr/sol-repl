@@ -109,14 +109,9 @@ function compile (session) {
         }
     }
 
-    if (res.errors && res.errors[0].severity === 'error') {
-        return [res.errors[0], null]
-    } else {
-        return [null, {
-            src,
-            out: res.contracts[SRC][CON],
-        }]
-    }
+    return res.errors && res.errors[0].severity === 'error'
+        ? { src, res: [res.errors[0], null] }
+        : { src, res: [null, res.contracts[SRC][CON]] }
 }
 
 module.exports = {
