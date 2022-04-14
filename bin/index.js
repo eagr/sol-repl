@@ -22,6 +22,7 @@ const signer = provider.getSigner()
 
 const session = []
 const history = []
+let src = ''
 async function exec (inp) {
     if (/^\s*$/.test(inp)) return
     history.push(inp)
@@ -44,12 +45,13 @@ async function exec (inp) {
         }
     } else {
         session.push(inp)
-        const [err, out] = compile(session.slice())
+        const [err, res] = compile(session.slice())
         if (err) {
             session.pop()
             console.error(err)
         } else {
-            const factory = ContractFactory.fromSolidity(out, signer)
+            src = res.src
+            const factory = ContractFactory.fromSolidity(res.out, signer)
             const snippets = await factory.deploy()
             await snippets.deployTransaction.wait()
             const rawRes = await snippets.exec()

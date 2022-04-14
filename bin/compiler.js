@@ -17,6 +17,8 @@ const P_ASSIGN = `^${P_TYPE_ARR_LOC}\\s+(?<ident>\\w+)\\s*=\\s*(?<val>.+);?$`
 const P_DECL = `^${P_TYPE_ARR_LOC}\\s+(?<ident>\\w+);?$`
 
 function sol (session, retType) {
+    retType = retType || 'int'
+
     const cns = []
     const fns = []
     const exps = []
@@ -69,9 +71,7 @@ function getRetType (msg) {
 }
 
 function compile (session) {
-    function trial (sess, retType) {
-        retType = retType || 'int'
-        const src = sol(sess, retType)
+    function trial (src) {
         const inp = JSON.stringify({
             language: 'Solidity',
             sources: { [SRC]: { content: src } },
@@ -86,19 +86,24 @@ function compile (session) {
     }
 
     // first trial is for determining return type
-    let res = trial(session)
+    let src = sol(session)
+    let res = trial(src)
     if (res.errors && res.errors[0].severity === 'error') {
         const err = res.errors[0]
         const rt = getRetType(err.message)
         if (rt) {
-            retType = rt
-            res = trial(session, rt)
+            src = sol(session, rt)
+            res = trial(src)
         }
     }
+
     if (res.errors && res.errors[0].severity === 'error') {
         return [res.errors[0], null]
     } else {
-        return [null, res.contracts[SRC][CON]]
+        return [null, {
+            src,
+            out: res.contracts[SRC][CON],
+        }]
     }
 }
 
