@@ -90,17 +90,12 @@ const DOWN = '\u001B\u005B\u0042'
 const RIGHT = '\u001B\u005B\u0043'
 const LEFT = '\u001B\u005B\u0044'
 
-let wantOut = false
 let buffer = ''
-let cursorPos = 2
+let cursor = 0
+let wantOut = false
 let historyPtr = history.length
 
 stdin.on('data', async (key) => {
-    function setBuffer (buf) {
-        buffer = buf
-        cursorPos = buffer.length + 2
-    }
-
     if (key === EOT) process.exit()
 
     if (key === ETX) {
@@ -111,51 +106,65 @@ stdin.on('data', async (key) => {
             return prompt()
         }
 
-        setBuffer('')
+        buffer = ''
+        cursor = 0
         stdout.write('\n')
         return prompt()
     }
     wantOut = false
 
     if (key === NAK) {
-        setBuffer('')
+        buffer = ''
+        cursor = 0
         return setLine(buffer)
     }
 
     if (key === DEL) {
-        setBuffer(buffer.slice(0, buffer.length - 1))
-        return setLine(buffer)
+        buffer = buffer.slice(0, Math.max(0, cursor - 1)) + buffer.slice(cursor)
+        cursor = Math.max(0, cursor - 1)
+        setLine(buffer)
+        return stdout.cursorTo(cursor + 2)
     }
 
     if (key === LEFT) {
-        cursorPos = Math.max(2, cursorPos - 1)
-        return stdout.cursorTo(cursorPos)
+        cursor = Math.max(0, cursor - 1)
+        return stdout.cursorTo(cursor + 2)
     }
     if (key === RIGHT) {
-        cursorPos = Math.min(cursorPos + 1, buffer.length + 2)
-        return stdout.cursorTo(cursorPos)
+        cursor = Math.min(cursor + 1, buffer.length)
+        return stdout.cursorTo(cursor + 2)
     }
     if (key === UP) {
         historyPtr = Math.max(0, historyPtr - 1)
-        setBuffer(history[historyPtr] || '')
+        buffer = history[historyPtr] || ''
+        cursor = buffer.length
         return setLine(buffer)
     }
     if (key === DOWN) {
         historyPtr = Math.min(historyPtr + 1, history.length)
-        setBuffer(history[historyPtr] || '')
+        buffer = history[historyPtr] || ''
+        cursor = buffer.length
         return setLine(buffer)
     }
 
     if (key === RET) {
         stdout.write('\n')
         await exec(buffer)
+
+        buffer = ''
+        cursor = 0
         historyPtr = history.length
-        setBuffer('')
         return prompt()
     }
 
-    setBuffer(buffer + key)
-    stdout.write(key)
+    buffer = buffer.slice(0, cursor) + key + buffer.slice(cursor)
+    cursor = cursor + 1
+    if (cursor === buffer.length) {
+        stdout.write(key)
+    } else {
+        setLine(buffer)
+        stdout.cursorTo(cursor + 2)
+    }
 })
 
 console.log(`Welcome to Solidity v${version}!`)
