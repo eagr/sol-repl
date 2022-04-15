@@ -122,25 +122,38 @@ stdin.on('data', async (key) => {
     if (key === DEL) {
         buffer = buffer.slice(0, Math.max(0, cursor - 1)) + buffer.slice(cursor)
         cursor = Math.max(0, cursor - 1)
-        setLine(buffer)
-        return stdout.cursorTo(cursor + 2)
+        if (cursor === buffer.length) {
+            stdout.cursorTo(cursor + 2)
+            stdout.clearLine(1)
+        } else {
+            setLine(buffer)
+            stdout.cursorTo(cursor + 2)
+        }
+        return
     }
 
     if (key === LEFT) {
         cursor = Math.max(0, cursor - 1)
         return stdout.cursorTo(cursor + 2)
     }
+
     if (key === RIGHT) {
         cursor = Math.min(cursor + 1, buffer.length)
         return stdout.cursorTo(cursor + 2)
     }
+
     if (key === UP) {
+        if (historyPtr === 0) return
+
         historyPtr = Math.max(0, historyPtr - 1)
         buffer = history[historyPtr] || ''
         cursor = buffer.length
         return setLine(buffer)
     }
+
     if (key === DOWN) {
+        if (historyPtr === history.length) return
+
         historyPtr = Math.min(historyPtr + 1, history.length)
         buffer = history[historyPtr] || ''
         cursor = buffer.length
