@@ -80,10 +80,11 @@ stdin.setRawMode(true)
 stdin.setEncoding('utf8')
 stdin.resume()
 
-const ETX = '\u0003'
-const EOT = '\u0004'
+const ETX = '\u0003'    // Ctrl-C
+const EOT = '\u0004'    // Ctrl-D
+const NAK = '\u0015'    // Ctrl-U
+
 const RET = '\u000D'
-const NAK = '\u0015'
 const DEL = '\u007F'
 const UP = '\u001B\u005B\u0041'
 const DOWN = '\u001B\u005B\u0042'
@@ -114,9 +115,10 @@ stdin.on('data', async (key) => {
     wantOut = false
 
     if (key === NAK) {
-        buffer = ''
+        buffer = buffer.slice(cursor)
         cursor = 0
-        return setLine(buffer)
+        setLine(buffer)
+        return stdout.cursorTo(cursor + 2)
     }
 
     if (key === DEL) {
