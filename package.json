@@ -15,7 +15,9 @@
   },
   "keywords": [
     "solidity",
-    "repl"
+    "repl",
+    "shell",
+    "ethereum"
   ],
   "author": {
     "name": "Julian Eager",
