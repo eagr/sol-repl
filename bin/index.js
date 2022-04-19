@@ -5,7 +5,7 @@ const { ethers } = require('ethers')
 const ganache = require('ganache')
 const prettier = require('prettier')
 const { compile } = require('./compiler')
-const { prompt, setLine, help, toPrintable, lastWordBound } = require('./repl')
+const { prompt, setLine, help, toPrintable, lastWordBound, prevWordStart } = require('./repl')
 const pkg = require('../package.json')
 
 const version = pkg.dependencies.solc
@@ -84,6 +84,7 @@ const CTRL_C = '\u0003'
 const CTRL_D = '\u0004'
 const CTRL_U = '\u0015'
 const ALT_DEL = '\u0017'    // also Ctrl-W
+const ALT_LEFT = '\u001B\u0062'
 
 const RET = '\u000D'
 const DEL = '\u007F'
@@ -114,6 +115,11 @@ stdin.on('data', async (key) => {
         return prompt()
     }
     wantOut = false
+
+    if (key === ALT_LEFT) {
+        cursor = prevWordStart(buffer, cursor)
+        return stdout.cursorTo(cursor + 2)
+    }
 
     if (key === CTRL_U) {
         buffer = buffer.slice(cursor)

@@ -46,10 +46,20 @@ function lastWordBound (str, pos) {
     return 0
 }
 
+function prevWordStart (str, pos) {
+    let prev = ''
+    for (let i = pos - 1; i >= 0; i--) {
+        if (/\s/.test(str[i]) && /\S/.test(prev)) return i + 1
+        prev = str[i]
+    }
+    return 0
+}
+
 module.exports = {
     prompt,
     setLine,
     help,
     toPrintable,
     lastWordBound,
+    prevWordStart,
 }
