@@ -87,6 +87,7 @@ const ALT_DEL = '\u0017'    // also Ctrl-W
 const ALT_LEFT = '\u001B\u0062'
 const ALT_RIGHT = '\u001B\u0066'
 const FN_LEFT = '\u001B\u005B\u0048'
+const FN_RIGHT = '\u001B\u005B\u0046'
 
 const RET = '\u000D'
 const DEL = '\u007F'
@@ -130,6 +131,11 @@ stdin.on('data', async (key) => {
 
     if (key === FN_LEFT) {
         cursor = 0
+        return stdout.cursorTo(cursor + 2)
+    }
+
+    if (key === FN_RIGHT) {
+        cursor = buffer.length
         return stdout.cursorTo(cursor + 2)
     }
 
