@@ -55,6 +55,15 @@ function prevWordStart (str, pos) {
     return 0
 }
 
+function nextWordEnd (str, pos) {
+    let prev = ''
+    for (let i = pos; i <= str.length; i++) {
+        if (/\s/.test(str[i]) && /\S/.test(prev)) return i
+        prev = str[i]
+    }
+    return str.length
+}
+
 module.exports = {
     prompt,
     setLine,
@@ -62,4 +71,5 @@ module.exports = {
     toPrintable,
     lastWordBound,
     prevWordStart,
+    nextWordEnd,
 }
