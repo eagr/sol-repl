@@ -83,7 +83,8 @@ stdin.resume()
 const CTRL_C = '\u0003'
 const CTRL_D = '\u0004'
 const CTRL_U = '\u0015'
-const ALT_DEL = '\u0017'    // also Ctrl-W
+const CTRL_W = '\u0017'
+const ALT_DEL = CTRL_W
 const ALT_LEFT = '\u001B\u0062'
 const ALT_RIGHT = '\u001B\u0066'
 const FN_LEFT = '\u001B\u005B\u0048'
