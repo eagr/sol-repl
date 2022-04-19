@@ -5,7 +5,7 @@ const { ethers } = require('ethers')
 const ganache = require('ganache')
 const prettier = require('prettier')
 const { compile } = require('./compiler')
-const { prompt, setLine, help, toPrintable } = require('./repl')
+const { prompt, setLine, help, toPrintable, lastWordBound } = require('./repl')
 const pkg = require('../package.json')
 
 const version = pkg.dependencies.solc
@@ -80,9 +80,10 @@ stdin.setRawMode(true)
 stdin.setEncoding('utf8')
 stdin.resume()
 
-const ETX = '\u0003'    // Ctrl-C
-const EOT = '\u0004'    // Ctrl-D
-const NAK = '\u0015'    // Ctrl-U
+const CTRL_C = '\u0003'
+const CTRL_D = '\u0004'
+const CTRL_U = '\u0015'
+const ALT_DEL = '\u0017'    // also Ctrl-W
 
 const RET = '\u000D'
 const DEL = '\u007F'
@@ -97,9 +98,9 @@ let wantOut = false
 let historyPtr = history.length
 
 stdin.on('data', async (key) => {
-    if (key === EOT) process.exit()
+    if (key === CTRL_D) process.exit()
 
-    if (key === ETX) {
+    if (key === CTRL_C) {
         if (wantOut) process.exit()
         if (buffer === '') {
             console.log('\n(To exit, press Ctrl+C again or Ctrl+D or type .exit)')
@@ -114,9 +115,17 @@ stdin.on('data', async (key) => {
     }
     wantOut = false
 
-    if (key === NAK) {
+    if (key === CTRL_U) {
         buffer = buffer.slice(cursor)
         cursor = 0
+        setLine(buffer)
+        return stdout.cursorTo(cursor + 2)
+    }
+
+    if (key === ALT_DEL) {
+        const bound = lastWordBound(buffer, cursor)
+        buffer = buffer.slice(0, bound) + buffer.slice(cursor)
+        cursor = bound
         setLine(buffer)
         return stdout.cursorTo(cursor + 2)
     }

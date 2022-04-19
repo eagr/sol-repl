@@ -37,9 +37,19 @@ function toPrintable (x) {
     return x
 }
 
+function lastWordBound (str, pos) {
+    const inWord = /\w/.test(str[pos - 1])
+    const pat = inWord ? /\W/ : /\w/
+    for (let i = pos - 1; i >= 0; i--) {
+        if (pat.test(str[i])) return i + 1
+    }
+    return 0
+}
+
 module.exports = {
     prompt,
     setLine,
     help,
     toPrintable,
+    lastWordBound,
 }
