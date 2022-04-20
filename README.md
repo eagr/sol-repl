@@ -1,6 +1,6 @@
 # sol-repl
 
-Solidity REPL (WIP)
+a REPL to provide instant feedback for Solidity snippets
 
 ## Features
 
@@ -11,16 +11,15 @@ Solidity REPL (WIP)
   * [ ] mapping
   * [ ] import
 * REPL
-  * [x] Node-like REPL interactions: Ctrl-C, Ctrl-D, ...
-  * [x] cursor shortcuts: Alt-Left, Fn-Right, ...
-  * [x] delete shortcuts: Alt-Del, Ctrl-U, ...
+  * [x] Node-like REPL interactions
+  * [x] cursor/delete shortcuts
   * [x] `.session` print formatted Solidity source
   * [x] history traversing
-  * [ ] history filtering
+  * [x] history filtering
 
 ## Usage
 
-**Install**
+**install**
 
 ```sh
 npm i -g sol-repl
@@ -49,6 +48,40 @@ contract Main {
 > msg.sender
 0x4B6F0b9546487B1a184ADc43e0b17299cCdf8648
 ```
+
+## REPL commands
+
+```
+.exit       Exit the REPL
+.help       Print this message
+.session    Print current session
+```
+
+## Shortcuts
+
+**cursor**
+
+<pre>
+<kbd>Alt+Left</kbd>   Cursor to previous word start
+<kbd>Alt+Right</kbd>  Cursor to next word end
+<kbd>Fn+Left</kbd>    Cursor to line start
+<kbd>Fn+Right</kbd>   Cursor to line end
+</pre>
+
+**delete**
+
+<pre>
+<kbd>Alt+Del</kbd>    Delete to previous word bound from cursor
+<kbd>Ctrl+W</kbd>     Alias of Alt+Del
+<kbd>Ctrl+U</kbd>     Delete to line start from cursor
+</pre>
+
+**interrupt**
+
+<pre>
+<kbd>Ctrl+C</kbd>     Clear line; signal an exit
+<kbd>Ctrl+D</kbd>     Immediately terminate REPL
+</pre>
 
 ## License
 
