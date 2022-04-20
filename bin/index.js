@@ -6,11 +6,12 @@ const ganache = require('ganache')
 const prettier = require('prettier')
 const { compile } = require('./compiler')
 const { prompt, setLine, help, toPrintable, lastWordBound, prevWordStart, nextWordEnd } = require('./repl')
-const pkg = require('../package.json')
 
-const version = pkg.dependencies.solc
+const pkg = require('../package.json')
+const ver = pkg.version
+const solVer = pkg.dependencies.solc
 yargs
-    .version(version)
+    .version(ver)
     .wrap(yargs.terminalWidth())
     .parse()
 
@@ -238,6 +239,6 @@ stdin.on('data', async (key) => {
     historyPtr = history.length
 })
 
-console.log(`Welcome to Solidity v${version}!`)
+console.log(`Welcome to Solidity v${solVer}!`)
 console.log('Type ".help" for more information.')
 prompt()
