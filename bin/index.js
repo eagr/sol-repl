@@ -100,7 +100,8 @@ const LEFT = '\u001B\u005B\u0044'
 let buffer = ''
 let cursor = 0
 let wantOut = false
-let historyPtr = history.length
+let filtered = []
+let historyPtr = 0
 
 stdin.on('data', async (key) => {
     if (key === CTRL_D) process.exit()
@@ -144,7 +145,11 @@ stdin.on('data', async (key) => {
         buffer = buffer.slice(cursor)
         cursor = 0
         setLine(buffer)
-        return stdout.cursorTo(cursor + 2)
+        stdout.cursorTo(cursor + 2)
+
+        filtered = buffer ? [] : history.slice(0)
+        historyPtr = filtered.length
+        return
     }
 
     if (key === ALT_DEL) {
@@ -152,19 +157,10 @@ stdin.on('data', async (key) => {
         buffer = buffer.slice(0, bound) + buffer.slice(cursor)
         cursor = bound
         setLine(buffer)
-        return stdout.cursorTo(cursor + 2)
-    }
+        stdout.cursorTo(cursor + 2)
 
-    if (key === DEL) {
-        buffer = buffer.slice(0, Math.max(0, cursor - 1)) + buffer.slice(cursor)
-        cursor = Math.max(0, cursor - 1)
-        if (cursor === buffer.length) {
-            stdout.cursorTo(cursor + 2)
-            stdout.clearLine(1)
-        } else {
-            setLine(buffer)
-            stdout.cursorTo(cursor + 2)
-        }
+        filtered = buffer ? [] : history.slice(0)
+        historyPtr = filtered.length
         return
     }
 
@@ -178,20 +174,36 @@ stdin.on('data', async (key) => {
         return stdout.cursorTo(cursor + 2)
     }
 
+    if (key === DEL) {
+        buffer = buffer.slice(0, Math.max(0, cursor - 1)) + buffer.slice(cursor)
+        cursor = Math.max(0, cursor - 1)
+        if (cursor === buffer.length) {
+            stdout.cursorTo(cursor + 2)
+            stdout.clearLine(1)
+        } else {
+            setLine(buffer)
+            stdout.cursorTo(cursor + 2)
+        }
+
+        filtered = buffer ? [] : history.slice(0)
+        historyPtr = filtered.length
+        return
+    }
+
     if (key === UP) {
         if (historyPtr === 0) return
 
         historyPtr = Math.max(0, historyPtr - 1)
-        buffer = history[historyPtr] || ''
+        buffer = filtered[historyPtr] || ''
         cursor = buffer.length
         return setLine(buffer)
     }
 
     if (key === DOWN) {
-        if (historyPtr === history.length) return
+        if (historyPtr === filtered.length) return
 
-        historyPtr = Math.min(historyPtr + 1, history.length)
-        buffer = history[historyPtr] || ''
+        historyPtr = Math.min(historyPtr + 1, filtered.length)
+        buffer = filtered[historyPtr] || ''
         cursor = buffer.length
         return setLine(buffer)
     }
@@ -202,6 +214,7 @@ stdin.on('data', async (key) => {
 
         buffer = ''
         cursor = 0
+        filtered = history.slice(0)
         historyPtr = history.length
         return prompt()
     }
@@ -214,6 +227,14 @@ stdin.on('data', async (key) => {
         setLine(buffer)
         stdout.cursorTo(cursor + 2)
     }
+
+    filtered.length = 0
+    for (let i = 0; i < history.length; i++) {
+        if (history[i].indexOf(buffer) === 0) {
+            filtered.push(history[i])
+        }
+    }
+    historyPtr = filtered.length
 })
 
 console.log(`Welcome to Solidity v${version}!`)
