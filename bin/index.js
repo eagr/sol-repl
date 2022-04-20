@@ -104,6 +104,9 @@ let filtered = []
 let historyPtr = 0
 
 stdin.on('data', async (key) => {
+
+    // interrupt
+
     if (key === CTRL_D) process.exit()
 
     if (key === CTRL_C) {
@@ -120,6 +123,18 @@ stdin.on('data', async (key) => {
         return prompt()
     }
     wantOut = false
+
+    // cursor
+
+    if (key === LEFT) {
+        cursor = Math.max(0, cursor - 1)
+        return stdout.cursorTo(cursor + 2)
+    }
+
+    if (key === RIGHT) {
+        cursor = Math.min(cursor + 1, buffer.length)
+        return stdout.cursorTo(cursor + 2)
+    }
 
     if (key === ALT_LEFT) {
         cursor = prevWordStart(buffer, cursor)
@@ -141,11 +156,18 @@ stdin.on('data', async (key) => {
         return stdout.cursorTo(cursor + 2)
     }
 
-    if (key === CTRL_U) {
-        buffer = buffer.slice(cursor)
-        cursor = 0
-        setLine(buffer)
-        stdout.cursorTo(cursor + 2)
+    // delete
+
+    if (key === DEL) {
+        buffer = buffer.slice(0, Math.max(0, cursor - 1)) + buffer.slice(cursor)
+        cursor = Math.max(0, cursor - 1)
+        if (cursor === buffer.length) {
+            stdout.cursorTo(cursor + 2)
+            stdout.clearLine(1)
+        } else {
+            setLine(buffer)
+            stdout.cursorTo(cursor + 2)
+        }
 
         filtered = buffer ? [] : history.slice(0)
         historyPtr = filtered.length
@@ -164,31 +186,18 @@ stdin.on('data', async (key) => {
         return
     }
 
-    if (key === LEFT) {
-        cursor = Math.max(0, cursor - 1)
-        return stdout.cursorTo(cursor + 2)
-    }
-
-    if (key === RIGHT) {
-        cursor = Math.min(cursor + 1, buffer.length)
-        return stdout.cursorTo(cursor + 2)
-    }
-
-    if (key === DEL) {
-        buffer = buffer.slice(0, Math.max(0, cursor - 1)) + buffer.slice(cursor)
-        cursor = Math.max(0, cursor - 1)
-        if (cursor === buffer.length) {
-            stdout.cursorTo(cursor + 2)
-            stdout.clearLine(1)
-        } else {
-            setLine(buffer)
-            stdout.cursorTo(cursor + 2)
-        }
+    if (key === CTRL_U) {
+        buffer = buffer.slice(cursor)
+        cursor = 0
+        setLine(buffer)
+        stdout.cursorTo(cursor + 2)
 
         filtered = buffer ? [] : history.slice(0)
         historyPtr = filtered.length
         return
     }
+
+    // history
 
     if (key === UP) {
         if (historyPtr === 0) return
@@ -207,6 +216,8 @@ stdin.on('data', async (key) => {
         cursor = buffer.length
         return setLine(buffer)
     }
+
+    // input
 
     if (key === RET) {
         stdout.write('\n')
