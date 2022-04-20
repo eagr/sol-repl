@@ -61,7 +61,7 @@ async function exec (inp) {
         if (err) {
             invalidSrc = comp.src
             session.pop()
-            console.error(err)
+            console.error(err.formattedMessage)
         } else {
             src = comp.src
             const factory = ContractFactory.fromSolidity(out, signer)
