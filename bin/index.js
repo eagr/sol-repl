@@ -22,13 +22,13 @@ const provider = new providers.Web3Provider(ganache.provider({
 const signer = provider.getSigner()
 
 const session = []
-const history = []
+const book = []
 let src = ''
 let invalidSrc = ''
 
 async function exec (inp) {
     if (/^\s*$/.test(inp)) return
-    history.push(inp)
+    book.push(inp)
 
     inp = inp.trim()
     if (/^\.[A-Za-z]+$/.test(inp)) {
@@ -97,10 +97,10 @@ const DOWN = '\u001B\u005B\u0042'
 const RIGHT = '\u001B\u005B\u0043'
 const LEFT = '\u001B\u005B\u0044'
 
-let buffer = ''
+let signaledExit = false
+let input = ''
 let cursor = 0
-let wantOut = false
-let filtered = []
+let history = []
 let historyPtr = 0
 
 stdin.on('data', async (key) => {
@@ -110,19 +110,19 @@ stdin.on('data', async (key) => {
     if (key === CTRL_D) process.exit()
 
     if (key === CTRL_C) {
-        if (wantOut) process.exit()
-        if (buffer === '') {
+        if (signaledExit) process.exit()
+        if (input === '') {
             console.log('\n(To exit, press Ctrl+C again or Ctrl+D or type .exit)')
-            wantOut = true
+            signaledExit = true
             return prompt()
         }
 
-        buffer = ''
+        input = ''
         cursor = 0
         stdout.write('\n')
         return prompt()
     }
-    wantOut = false
+    signaledExit = false
 
     // cursor
 
@@ -142,48 +142,48 @@ stdin.on('data', async (key) => {
         key === ALT_LEFT || key === ALT_RIGHT ||
         key === FN_LEFT || key === FN_RIGHT
     ) {
-        cursor = cursorTo(buffer, cursor, key)
+        cursor = cursorTo(input, cursor, key)
         return stdout.cursorTo(cursor + 2)
     }
 
     // delete
 
     if (key === DEL) {
-        buffer = buffer.slice(0, Math.max(0, cursor - 1)) + buffer.slice(cursor)
+        input = input.slice(0, Math.max(0, cursor - 1)) + input.slice(cursor)
         cursor = Math.max(0, cursor - 1)
-        if (cursor === buffer.length) {
+        if (cursor === input.length) {
             stdout.cursorTo(cursor + 2)
             stdout.clearLine(1)
         } else {
-            setLine(buffer)
+            setLine(input)
             stdout.cursorTo(cursor + 2)
         }
 
-        filtered = buffer ? [] : history.slice(0)
-        historyPtr = filtered.length
+        history = input ? [] : book.slice(0)
+        historyPtr = history.length
         return
     }
 
     if (key === ALT_DEL) {
-        const bound = lastWordBound(buffer, cursor)
-        buffer = buffer.slice(0, bound) + buffer.slice(cursor)
+        const bound = lastWordBound(input, cursor)
+        input = input.slice(0, bound) + input.slice(cursor)
         cursor = bound
-        setLine(buffer)
+        setLine(input)
         stdout.cursorTo(cursor + 2)
 
-        filtered = buffer ? [] : history.slice(0)
-        historyPtr = filtered.length
+        history = input ? [] : book.slice(0)
+        historyPtr = history.length
         return
     }
 
     if (key === CTRL_U) {
-        buffer = buffer.slice(cursor)
+        input = input.slice(cursor)
         cursor = 0
-        setLine(buffer)
+        setLine(input)
         stdout.cursorTo(cursor + 2)
 
-        filtered = buffer ? [] : history.slice(0)
-        historyPtr = filtered.length
+        history = input ? [] : book.slice(0)
+        historyPtr = history.length
         return
     }
 
@@ -193,49 +193,49 @@ stdin.on('data', async (key) => {
         if (historyPtr === 0) return
 
         historyPtr = Math.max(0, historyPtr - 1)
-        buffer = filtered[historyPtr] || ''
-        cursor = buffer.length
-        return setLine(buffer)
+        input = history[historyPtr] || ''
+        cursor = input.length
+        return setLine(input)
     }
 
     if (key === DOWN) {
-        if (historyPtr === filtered.length) return
+        if (historyPtr === history.length) return
 
-        historyPtr = Math.min(historyPtr + 1, filtered.length)
-        buffer = filtered[historyPtr] || ''
-        cursor = buffer.length
-        return setLine(buffer)
+        historyPtr = Math.min(historyPtr + 1, history.length)
+        input = history[historyPtr] || ''
+        cursor = input.length
+        return setLine(input)
     }
 
     // input
 
     if (key === RET) {
         stdout.write('\n')
-        await exec(buffer)
+        await exec(input)
 
-        buffer = ''
+        input = ''
         cursor = 0
-        filtered = history.slice(0)
-        historyPtr = history.length
+        history = book.slice(0)
+        historyPtr = book.length
         return prompt()
     }
 
-    buffer = buffer.slice(0, cursor) + key + buffer.slice(cursor)
+    input = input.slice(0, cursor) + key + input.slice(cursor)
     cursor = cursor + 1
-    if (cursor === buffer.length) {
+    if (cursor === input.length) {
         stdout.write(key)
     } else {
-        setLine(buffer)
+        setLine(input)
         stdout.cursorTo(cursor + 2)
     }
 
-    filtered.length = 0
-    for (let i = 0; i < history.length; i++) {
-        if (history[i].indexOf(buffer) === 0) {
-            filtered.push(history[i])
+    history.length = 0
+    for (let i = 0; i < book.length; i++) {
+        if (book[i].indexOf(input) === 0) {
+            history.push(book[i])
         }
     }
-    historyPtr = filtered.length
+    historyPtr = history.length
 })
 
 console.log(`Welcome to Solidity v${version}!`)
