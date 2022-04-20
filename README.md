@@ -61,27 +61,21 @@ contract Main {
 
 **cursor**
 
-<pre>
-<kbd>Alt+Left</kbd>   Cursor to previous word start
-<kbd>Alt+Right</kbd>  Cursor to next word end
-<kbd>Fn+Left</kbd>    Cursor to line start
-<kbd>Fn+Right</kbd>   Cursor to line end
-</pre>
+* <kbd>Alt+Left</kbd>   Cursor to previous word start
+* <kbd>Alt+Right</kbd>  Cursor to next word end
+* <kbd>Fn+Left</kbd>    Cursor to line start
+* <kbd>Fn+Right</kbd>   Cursor to line end
 
 **delete**
 
-<pre>
-<kbd>Alt+Del</kbd>    Delete to previous word bound from cursor
-<kbd>Ctrl+W</kbd>     Alias of Alt+Del
-<kbd>Ctrl+U</kbd>     Delete to line start from cursor
-</pre>
+* <kbd>Alt+Del</kbd>    Delete to previous word bound from cursor
+* <kbd>Ctrl+W</kbd>     Alias of Alt+Del
+* <kbd>Ctrl+U</kbd>     Delete to line start from cursor
 
 **interrupt**
 
-<pre>
-<kbd>Ctrl+C</kbd>     Clear line; signal an exit
-<kbd>Ctrl+D</kbd>     Immediately terminate REPL
-</pre>
+* <kbd>Ctrl+C</kbd>     Clear line; signal an exit
+* <kbd>Ctrl+D</kbd>     Immediately terminate REPL
 
 ## License
 
