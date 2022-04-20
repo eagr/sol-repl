@@ -126,33 +126,23 @@ stdin.on('data', async (key) => {
 
     // cursor
 
-    if (key === LEFT) {
-        cursor = Math.max(0, cursor - 1)
-        return stdout.cursorTo(cursor + 2)
+    function cursorTo (buf, cur, inp) {
+        switch (inp) {
+            case LEFT: return Math.max(0, cur - 1)
+            case RIGHT: return Math.min(cur + 1, buf.length)
+            case ALT_LEFT: return prevWordStart(buf, cur)
+            case ALT_RIGHT: return nextWordEnd(buf, cur)
+            case FN_LEFT: return 0
+            case FN_RIGHT: return buf.length
+        }
     }
 
-    if (key === RIGHT) {
-        cursor = Math.min(cursor + 1, buffer.length)
-        return stdout.cursorTo(cursor + 2)
-    }
-
-    if (key === ALT_LEFT) {
-        cursor = prevWordStart(buffer, cursor)
-        return stdout.cursorTo(cursor + 2)
-    }
-
-    if (key === ALT_RIGHT) {
-        cursor = nextWordEnd(buffer, cursor)
-        return stdout.cursorTo(cursor + 2)
-    }
-
-    if (key === FN_LEFT) {
-        cursor = 0
-        return stdout.cursorTo(cursor + 2)
-    }
-
-    if (key === FN_RIGHT) {
-        cursor = buffer.length
+    if (
+        key === LEFT || key === RIGHT ||
+        key === ALT_LEFT || key === ALT_RIGHT ||
+        key === FN_LEFT || key === FN_RIGHT
+    ) {
+        cursor = cursorTo(buffer, cursor, key)
         return stdout.cursorTo(cursor + 2)
     }
 
