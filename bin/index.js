@@ -1,11 +1,5 @@
 #!/usr/bin/env node
 
-const { ethers } = require('ethers')
-const ganache = require('ganache')
-const prettier = require('prettier')
-const { compile } = require('./compiler')
-const { prompt, setLine, help, toPrintable, lastWordBound, prevWordStart, nextWordEnd } = require('./repl')
-
 const pkg = require('../package.json')
 const ver = pkg.version
 const solVer = pkg.dependencies.solc
@@ -15,6 +9,12 @@ if (option === '--version' || option === '-v') {
     console.log(ver)
     process.exit()
 }
+
+const { ethers } = require('ethers')
+const ganache = require('ganache')
+const prettier = require('prettier')
+const { compile } = require('./compiler')
+const { prompt, setLine, help, toPrintable, lastWordBound, prevWordStart, nextWordEnd } = require('./repl')
 
 ethers.utils.Logger.setLogLevel('OFF')
 const { providers, ContractFactory } = ethers
