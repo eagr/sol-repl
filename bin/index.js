@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-const yargs = require('yargs')
 const { ethers } = require('ethers')
 const ganache = require('ganache')
 const prettier = require('prettier')
@@ -10,10 +9,12 @@ const { prompt, setLine, help, toPrintable, lastWordBound, prevWordStart, nextWo
 const pkg = require('../package.json')
 const ver = pkg.version
 const solVer = pkg.dependencies.solc
-yargs
-    .version(ver)
-    .wrap(yargs.terminalWidth())
-    .parse()
+
+const option = process.argv.slice(2)[0]
+if (option === '--version' || option === '-v') {
+    console.log(ver)
+    process.exit()
+}
 
 ethers.utils.Logger.setLogLevel('OFF')
 const { providers, ContractFactory } = ethers
