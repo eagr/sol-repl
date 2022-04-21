@@ -1,14 +1,14 @@
 const solc = require('solc')
 
 const P_BYTES = 'bytes(?:3[0-2]|2\\d|1\\d|[1-9])?'
-const P_UINT = 'uint(?:256|128|64|32|16|8)?'
-const P_INT = 'int(?:256|128|64|32|16|8)?'
-const P_TYPE = `${P_BYTES}|${P_UINT}|${P_INT}|bool|address payable|address|string|ufixed|fixed`
+const P_UINT = 'uint(?:256|248|240|232|224|216|208|200|192|184|176|168|160|152|144|136|128|120|112|104|96|88|80|72|64|56|48|40|32|24|16|8)?'
+const P_INT = 'int(?:256|248|240|232|224|216|208|200|192|184|176|168|160|152|144|136|128|120|112|104|96|88|80|72|64|56|48|40|32|24|16|8)?'
+const P_TYPE_ELEM = `address payable|address|bool|string|${P_BYTES}|${P_UINT}|${P_INT}|ufixed|fixed`
 
-const P_ARR = '\\[\\d*\\]'
+const P_ARR = '\\[.*\\]'
 const P_LOC = `calldata|memory|storage`
-const P_TYPE_ARR = `(?:${P_TYPE})(?:${P_ARR})?`
-const P_TYPE_ARR_LOC = `(?:${P_TYPE})(?:${P_ARR})?(?: (?:${P_LOC}))?`
+const P_TYPE_ARR = `(?:${P_TYPE_ELEM})(?:${P_ARR})?`
+const P_TYPE_ARR_LOC = `(?:${P_TYPE_ELEM})(?:${P_ARR})?(?: (?:${P_LOC}))?`
 
 const P_IDENT = '[a-zA-Z$_][a-zA-Z0-9$_]*'
 const P_ASSIGN = `^(?:(?:${P_TYPE_ARR_LOC}|${P_IDENT})\\s+)?(?<ident>${P_IDENT})\\s*=\\s*(?<val>.+);?$`
