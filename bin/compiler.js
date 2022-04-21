@@ -16,6 +16,12 @@ const P_TYPE_ARR_LOC = `(?:${P_TYPE})(?:${P_ARR})?(?: (?:${P_LOC}))?`
 const P_ASSIGN = `^(?:${P_TYPE_ARR_LOC}|\\w+)\\s+(?<ident>\\w+)\\s*=\\s*(?<val>.+);?$`
 const P_DECL = `^${P_TYPE_ARR_LOC}\\s+(?<ident>\\w+);?$`
 
+// auto semicolon insertion
+function asi (ln) {
+    if (/[;{}]$/.test(ln)) return ln
+    return ln + ';'
+}
+
 function sol (session, retType) {
     retType = retType || 'int'
     const isContract = retType.indexOf('contract ') === 0
@@ -27,14 +33,15 @@ function sol (session, retType) {
     let mayMutate = false
 
     for (let i = 0; i < session.length; i++) {
-        const s = session[i]
+        let s = session[i]
         if (/^contract/.test(s)) {
             cns.push(s)
         } else if (/^function/.test(s)) {
             fns.push(s)
         } else {
-            exps.push(s)
             if (/=\s*new/.test(s)) mayMutate = true
+            session[i] = s = asi(s)
+            exps.push(s)
         }
     }
 
@@ -51,7 +58,7 @@ function sol (session, retType) {
         } else if (decl = last.match(new RegExp(P_DECL))) {
             ret = `${decl.groups['ident']}`
         }
-        ret = 'return ' + ret + ';'
+        ret = 'return ' + asi(ret)
         const mut = mayMutate ? '' : 'view'
         retSign = mut + ' returns (' + retType + ')'
     }
@@ -66,10 +73,7 @@ function sol (session, retType) {
         ${fns.join('\n')}
 
         function exec() public ${retSign} {
-            ${exps.map((e) => {
-                if (/}$/.test(e)) return e
-                return e + ';'
-            }).join('\n')}
+            ${exps.join('\n')}
 
             ${ret}
         }
