@@ -5,17 +5,22 @@ a REPL to provide instant feedback for Solidity snippets
 ## Features
 
 * language
-  * [x] function
+  * [ ] constant
   * [ ] contract
-  * [ ] struct
-  * [ ] mapping
+  * [ ] enum
+  * [x] function
   * [ ] import
+  * [ ] interface
+  * [ ] library
+  * [ ] struct
+  * [ ] type
 * REPL
   * [x] Node-like REPL interactions
   * [x] cursor/delete shortcuts
-  * [x] `.session` print formatted Solidity source
   * [x] history traversing
   * [x] history filtering
+  * [x] `.session` print formatted Solidity source
+  * [ ] `.editor` editor mode
 
 ## Usage
 
