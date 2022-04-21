@@ -1,8 +1,5 @@
 const solc = require('solc')
 
-const SRC = 'main.sol'
-const CON = 'Main'
-
 const P_BYTES = 'bytes(?:3[0-2]|2\\d|1\\d|[1-9])?'
 const P_UINT = 'uint(?:256|128|64|32|16|8)?'
 const P_INT = 'int(?:256|128|64|32|16|8)?'
@@ -13,8 +10,12 @@ const P_LOC = `calldata|memory|storage`
 const P_TYPE_ARR = `(?:${P_TYPE})(?:${P_ARR})?`
 const P_TYPE_ARR_LOC = `(?:${P_TYPE})(?:${P_ARR})?(?: (?:${P_LOC}))?`
 
-const P_ASSIGN = `^(?:${P_TYPE_ARR_LOC}|\\w+)\\s+(?<ident>\\w+)\\s*=\\s*(?<val>.+);?$`
-const P_DECL = `^${P_TYPE_ARR_LOC}\\s+(?<ident>\\w+);?$`
+const P_IDENT = '[a-zA-Z$_][a-zA-Z0-9$_]*'
+const P_ASSIGN = `^(?:(?:${P_TYPE_ARR_LOC}|${P_IDENT})\\s+)?(?<ident>${P_IDENT})\\s*=\\s*(?<val>.+);?$`
+const P_DECL = `^(?:${P_TYPE_ARR_LOC}|${P_IDENT})\\s+(?<ident>${P_IDENT});?$`
+
+const SRC = 'main.sol'
+const CON = 'Main'
 
 // auto semicolon insertion
 function asi (ln) {
