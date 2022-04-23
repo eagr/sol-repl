@@ -13,6 +13,10 @@ const P_UNIT = 'ether|gwei|wei|seconds|minutes|hours|days|weeks|years'
 const P_IDENT = '[a-zA-Z$_][a-zA-Z0-9$_]*'
 const P_IDENT_PATH = `${P_IDENT}(?:\\.${P_IDENT})*`
 
+const P_TYPE_PARAMS = '[\\s\\S]*'
+const P_TYPE_RET_PARAMS = '[\\s\\S]+'
+const P_TYPE_FUNC = `function\\s*\\(${P_TYPE_PARAMS}\\)(?:\\s*(?:${P_VIS}))?(?:\\s*(?:${P_MUT}))?(?:\\s*return\\s*\\(?:${P_TYPE_RET_PARAMS}\\))?`
+
 const P_ARR = '\\[.*\\]'
 const P_TYPE_ARR = `(?:${P_TYPE_ELEM})(?:${P_ARR})?`
 const P_TYPE_ARR_LOC = `(?:${P_TYPE_ELEM})(?:${P_ARR})?(?: (?:${P_LOC}))?`
