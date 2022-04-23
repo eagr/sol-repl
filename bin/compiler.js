@@ -17,6 +17,10 @@ const P_TYPE_PARAMS = '[\\s\\S]*'
 const P_TYPE_RET_PARAMS = '[\\s\\S]+'
 const P_TYPE_FUNC = `function\\s*\\(${P_TYPE_PARAMS}\\)(?:\\s*(?:${P_VIS}))?(?:\\s*(?:${P_MUT}))?(?:\\s*return\\s*\\(?:${P_TYPE_RET_PARAMS}\\))?`
 
+const P_TYPE_MAP_KEY = `${P_TYPE_ELEM}|${P_IDENT_PATH}`
+const P_TYPE_MAP_VAL = '[\\s\\S]+'
+const P_TYPE_MAP = `mapping\\s*\\(\\s*(?:${P_TYPE_MAP_KEY})\\s*=>${P_TYPE_MAP_VAL}\\)`
+
 const P_ARR = '\\[.*\\]'
 const P_TYPE_ARR = `(?:${P_TYPE_ELEM})(?:${P_ARR})?`
 const P_TYPE_ARR_LOC = `(?:${P_TYPE_ELEM})(?:${P_ARR})?(?: (?:${P_LOC}))?`
