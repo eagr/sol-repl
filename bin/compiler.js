@@ -21,12 +21,11 @@ const P_TYPE_MAP_KEY = `${P_TYPE_ELEM}|${P_IDENT_PATH}`
 const P_TYPE_MAP_VAL = '[\\s\\S]+'
 const P_TYPE_MAP = `mapping\\s*\\(\\s*(?:${P_TYPE_MAP_KEY})\\s*=>${P_TYPE_MAP_VAL}\\)`
 
-const P_ARR = '\\[.*\\]'
-const P_TYPE_ARR = `(?:${P_TYPE_ELEM})(?:${P_ARR})?`
-const P_TYPE_ARR_LOC = `(?:${P_TYPE_ELEM})(?:${P_ARR})?(?: (?:${P_LOC}))?`
+const P_TYPE = `(?:${P_TYPE_FUNC}|${P_TYPE_MAP}|${P_TYPE_ELEM}|${P_IDENT_PATH})(?:\\[.*\\])?`
 
-const P_ASSIGN = `^(?:(?:${P_TYPE_ARR_LOC}|${P_IDENT})\\s+)?(?<ident>${P_IDENT})\\s*=\\s*(?<val>.+);?$`
-const P_DECL = `^(?:${P_TYPE_ARR_LOC}|${P_IDENT})\\s+(?<ident>${P_IDENT});?$`
+const P_EXP = '[\\s\\S]+'
+const P_ASSIGN = `^(?:(?<type>${P_TYPE})\\s+)?(?<ident>${P_IDENT})\\s*=\\s*(?<val>${P_EXP})`
+const P_DECL = `^(?<type>${P_TYPE})\\s+(?<ident>${P_IDENT})`
 
 const SRC = 'main.sol'
 const CON = 'Main'
@@ -101,7 +100,7 @@ function getRetType (msg) {
         let rt = ''
         const cap = matches[1]
         if (cap.indexOf('contract ') === 0) rt = cap
-        rt = rt || cap.match(new RegExp(P_TYPE_ARR))[0]
+        rt = rt || cap.match(new RegExp(P_TYPE))[0]
 
         const rl = cap.match(/calldata|memory/)
         if (rl) rt += ' ' + rl[0]
