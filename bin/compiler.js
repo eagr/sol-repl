@@ -95,15 +95,17 @@ function sol (session, retType) {
 }
 
 function getRetType (msg) {
-    const matches = msg.match(new RegExp(`^Return argument type (contract \\w+|[\\w\\d\\[\\]]+ (?:${P_LOC})?)`))
+    const matches = msg.match(new RegExp(`^Return argument type (contract ${P_IDENT}|[\\w\\[\\]]+\\s+(?:${P_LOC})?)`))
     if (matches) {
         let rt = ''
+
         const cap = matches[1]
         if (cap.indexOf('contract ') === 0) rt = cap
-        rt = rt || cap.match(new RegExp(P_TYPE))[0]
+        rt = rt || cap.match(new RegExp(`(?:${P_TYPE_ELEM})(?:\\[.*\\])?`))[0]
 
         const rl = cap.match(/calldata|memory/)
         if (rl) rt += ' ' + rl[0]
+
         if (/\]$/.test(rt) || rt === 'string') rt += ' memory'
         return rt
     }
