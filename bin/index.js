@@ -14,7 +14,7 @@ const { ethers } = require('ethers')
 const ganache = require('ganache')
 const prettier = require('prettier')
 const { compile } = require('./compiler')
-const { prompt, setLine, help, toPrintable, lastWordBound, prevWordStart, nextWordEnd } = require('./repl')
+const { prompt, setLine, help, toDisplay, lastWordBound, prevWordStart, nextWordEnd } = require('./repl')
 
 ethers.utils.Logger.setLogLevel('OFF')
 const { providers, ContractFactory } = ethers
@@ -72,7 +72,7 @@ async function exec (inp) {
             const rawRes = await snippets.exec()
 
             if (typeof rawRes.wait === 'function') return
-            console.log(toPrintable(rawRes))
+            console.log(toDisplay(rawRes))
         }
     }
 }

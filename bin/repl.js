@@ -26,7 +26,7 @@ function help () {
     }
 }
 
-function toPrintable (x) {
+function toDisplay (x) {
     function isStruct (x) {
         if (Array.isArray(x)) {
             const keys = Object.keys(x)
@@ -54,12 +54,12 @@ function toPrintable (x) {
             const keys = Object.keys(x).slice(x.length)
             for (let i = 0; i < keys.length; i++) {
                 const key = keys[i]
-                struct[key] = toPrintable(x[key])
+                struct[key] = toDisplay(x[key])
             }
             return struct
         }
 
-        x = x.map(toPrintable)
+        x = x.map(toDisplay)
         return '[' + x.join(', ') + ']'
     }
 
@@ -97,7 +97,7 @@ module.exports = {
     prompt,
     setLine,
     help,
-    toPrintable,
+    toDisplay,
     lastWordBound,
     prevWordStart,
     nextWordEnd,
