@@ -42,12 +42,14 @@ function asi (ln) {
     return ln + ';'
 }
 
+const reType = new RegExp(`^type\\s+${P_IDENT}\\s+is\\s+(?:${P_TYPE_ELEM})`)
 const reConst = new RegExp(`^(?:${P_TYPE_ELEM}(?:${P_ARR})?)\\s+constant`)
 const reAssign = new RegExp(`${P_ASSIGN};$`)
 const reDecl = new RegExp(`${P_DECL};$`)
 function sol (session, retType, mayMutate) {
     mayMutate = mayMutate || false
 
+    const types = []
     const contracts = []
     const constants = []
     const enums = []
@@ -56,7 +58,10 @@ function sol (session, retType, mayMutate) {
 
     for (let i = 0; i < session.length; i++) {
         let s = session[i]
-        if (/^contract/.test(s)) {
+        if (reType.test(s)) {
+            session[i] = s = asi(s)
+            types.push(s)
+        } else if (/^contract/.test(s)) {
             contracts.push(s)
         } else if (reConst.test(s)) {
             session[i] = s = asi(s)
@@ -96,6 +101,7 @@ function sol (session, retType, mayMutate) {
     // SPDX-License-Identifier: UNLICENSED
     pragma solidity ^0.8.0;
 
+    ${types.join('\n')}
     ${contracts.join('\n')}
 
     contract ${CON} {
