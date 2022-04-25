@@ -1,6 +1,6 @@
 {
   "name": "sol-repl",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Solidity REPL",
   "files": [
     "bin"
