@@ -45,10 +45,6 @@ const reConst = new RegExp(`^(?:${P_TYPE_ELEM}(?:${P_ARR})?)\\s+constant`)
 const reAssign = new RegExp(`${P_ASSIGN};$`)
 const reDecl = new RegExp(`${P_DECL};$`)
 function sol (session, retType) {
-    retType = retType || 'int'
-    const isContract = retType.indexOf('contract ') === 0
-    retType = isContract ? retType.substring('contract '.length) : retType
-
     const cntrs = []
     const fns = []
     const cnsts = []
@@ -110,7 +106,8 @@ function sol (session, retType) {
     }`
 }
 
-const reMsg = new RegExp(`^Return argument type (contract ${P_IDENT}|[\\w\\[\\]]+\\s+(?:${P_LOC})?)`)
+const reMsg = new RegExp(`^Return argument type ([\\s\\S]+) is not implicitly convertible to`)
+const reContract = new RegExp(`contract (${P_IDENT})`)
 const reRetType = new RegExp(`(?:${P_TYPE_ELEM})(?:${P_ARR})?`)
 function getRetType (msg) {
     const matches = msg.match(reMsg)
@@ -118,7 +115,9 @@ function getRetType (msg) {
         let rt = ''
 
         const cap = matches[1]
-        if (cap.indexOf('contract ') === 0) rt = cap
+        if (cap.indexOf('contract') >= 0) {
+            rt = cap.match(reContract)[1]
+        }
         rt = rt || cap.match(reRetType)[0]
 
         const rl = cap.match(/calldata|memory/)
@@ -146,13 +145,14 @@ function compile (session) {
     }
 
     // first trial is for determining return type
-    let src = sol(session)
+    let retType = 'int'
+    let src = sol(session, retType)
     let res = trial(src)
     if (res.errors && res.errors[0].severity === 'error') {
         const err = res.errors[0]
-        const rt = getRetType(err.message)
-        if (rt) {
-            src = sol(session, rt)
+        retType = getRetType(err.message)
+        if (retType) {
+            src = sol(session, retType)
             res = trial(src)
         }
     }
