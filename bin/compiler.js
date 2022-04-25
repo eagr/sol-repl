@@ -38,6 +38,9 @@ function asi (ln) {
     return ln + ';'
 }
 
+const reAssign = new RegExp(`${P_ASSIGN};$`)
+const reDecl = new RegExp(`${P_DECL};$`)
+const reIdent = new RegExp(`(?<ident>${P_IDENT_PATH});$`)
 function sol (session, retType) {
     retType = retType || 'int'
     const isContract = retType.indexOf('contract ') === 0
@@ -71,11 +74,11 @@ function sol (session, retType) {
         let ident = ''
 
         // order matters
-        if (match = last.match(new RegExp(`${P_ASSIGN};$`))) {
+        if (match = last.match(reAssign)) {
             ident = `${match.groups['ident']}`
-        } else if (match = last.match(new RegExp(`${P_DECL};$`))) {
+        } else if (match = last.match(reDecl)) {
             ident = `${match.groups['ident']}`
-        } else if (match = last.match(new RegExp(`(?<ident>${P_IDENT_PATH});$`))) {
+        } else if (match = last.match(reIdent)) {
             ident = `${match.groups['ident']}`
         }
 
@@ -101,14 +104,16 @@ function sol (session, retType) {
     }`
 }
 
+const reMsg = new RegExp(`^Return argument type (contract ${P_IDENT}|[\\w\\[\\]]+\\s+(?:${P_LOC})?)`)
+const reRetType = new RegExp(`(?:${P_TYPE_ELEM})(?:\\[.*\\])?`)
 function getRetType (msg) {
-    const matches = msg.match(new RegExp(`^Return argument type (contract ${P_IDENT}|[\\w\\[\\]]+\\s+(?:${P_LOC})?)`))
+    const matches = msg.match(reMsg)
     if (matches) {
         let rt = ''
 
         const cap = matches[1]
         if (cap.indexOf('contract ') === 0) rt = cap
-        rt = rt || cap.match(new RegExp(`(?:${P_TYPE_ELEM})(?:\\[.*\\])?`))[0]
+        rt = rt || cap.match(reRetType)[0]
 
         const rl = cap.match(/calldata|memory/)
         if (rl) rt += ' ' + rl[0]
