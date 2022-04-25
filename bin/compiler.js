@@ -52,6 +52,7 @@ function sol (session, retType, mayMutate) {
     const types = []
     const enums = []
     const constants = []
+    const structs = []
     const contracts = []
     const fns = []
     const exps = []
@@ -66,6 +67,8 @@ function sol (session, retType, mayMutate) {
         } else if (reConst.test(s)) {
             session[i] = s = asi(s)
             constants.push(s)
+        } else if (/^struct/.test(s)) {
+            structs.push(s)
         } else if (/^contract/.test(s)) {
             contracts.push(s)
         } else if (/^function/.test(s)) {
@@ -104,6 +107,7 @@ function sol (session, retType, mayMutate) {
     ${types.join('\n')}
     ${enums.join('\n')}
     ${constants.join('\n')}
+    ${structs.join('\n')}
     ${contracts.join('\n')}
 
     contract ${CON} {
@@ -118,8 +122,9 @@ function sol (session, retType, mayMutate) {
 }
 
 const reMsg = new RegExp(`^Return argument type ([\\s\\S]+) is not implicitly convertible to`)
-const reContract = new RegExp(`contract (${P_IDENT})`)
 const reEnum = new RegExp(`enum (${P_IDENT_PATH})`)
+const reStruct = new RegExp(`struct (${P_IDENT_PATH})`)
+const reContract = new RegExp(`contract (${P_IDENT})`)
 const reRetType = new RegExp(`(?:${P_TYPE_ELEM})(?:${P_ARR})?`)
 function getRetType (msg) {
     const matches = msg.match(reMsg)
@@ -127,10 +132,12 @@ function getRetType (msg) {
         let rt = ''
 
         const cap = matches[1]
-        if (cap.indexOf('contract') >= 0) {
-            rt = cap.match(reContract)[1]
-        } else if (cap.indexOf('enum') >= 0) {
+        if (cap.indexOf('enum') >= 0) {
             rt = cap.match(reEnum)[1]
+        } else if (cap.indexOf('struct') >= 0) {
+            rt = cap.match(reStruct)[1]
+        } else if (cap.indexOf('contract') >= 0) {
+            rt = cap.match(reContract)[1]
         }
         rt = rt || cap.match(reRetType)[0]
 
