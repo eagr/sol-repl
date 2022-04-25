@@ -27,7 +27,7 @@ function help () {
 function toPrintable (x) {
     if (x._isBigNumber) return x.toString()
     if (typeof x === 'string') {
-        if (x.indexOf('0x' === 0)) return x
+        if (x.indexOf('0x') === 0) return x
         return JSON.stringify(x)
     }
     if (Array.isArray(x)) {
