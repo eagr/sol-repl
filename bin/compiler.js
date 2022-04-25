@@ -144,21 +144,30 @@ function compile (session) {
         return out
     }
 
-    // first trial is for determining return type
+    function firstError (errors) {
+        for (let i = 0; i < errors.length; i++) {
+            const err = errors[i]
+            if (err.severity === 'error') return err
+        }
+        return null
+    }
+
+    let error = null
     let retType = 'int'
     let src = sol(session, retType)
     let res = trial(src)
-    if (res.errors && res.errors[0].severity === 'error') {
-        const err = res.errors[0]
-        retType = getRetType(err.message)
+
+    // trial for return type
+    if (res.errors && (error = firstError(res.errors))) {
+        retType = getRetType(error.message)
         if (retType) {
             src = sol(session, retType)
             res = trial(src)
         }
     }
 
-    return res.errors && res.errors[0].severity === 'error'
-        ? { src, res: [res.errors[0], null] }
+    return res.errors && (error = firstError(res.errors))
+        ? { src, res: [error, null] }
         : { src, res: [null, res.contracts[SRC][CON]] }
 }
 
