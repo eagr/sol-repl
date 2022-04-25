@@ -9,6 +9,7 @@ const P_VIS = `private|internal|public|external`
 const P_LOC = `calldata|memory|storage`
 const P_MUT = `pure|view|payable`
 const P_UNIT = 'ether|gwei|wei|seconds|minutes|hours|days|weeks|years'
+const P_ARR = `\\[[\\s\\S]*\\]`
 
 const P_IDENT = '[a-zA-Z$_][a-zA-Z0-9$_]*'
 const P_IDENT_PATH = `${P_IDENT}(?:\\.${P_IDENT})*`
@@ -21,13 +22,15 @@ const P_TYPE_MAP_KEY = `${P_TYPE_ELEM}|${P_IDENT_PATH}`
 const P_TYPE_MAP_VAL = '[\\s\\S]+'
 const P_TYPE_MAP = `mapping\\s*\\(\\s*(?:${P_TYPE_MAP_KEY})\\s*=>${P_TYPE_MAP_VAL}\\)`
 
-const P_TYPE = `(?:${P_TYPE_FUNC}|${P_TYPE_MAP}|${P_TYPE_ELEM}|${P_IDENT_PATH})(?:\\[.*\\])?`
+const P_TYPE = `(?:${P_TYPE_FUNC}|${P_TYPE_MAP}|${P_TYPE_ELEM}|${P_IDENT_PATH})(?:${P_ARR})?`
 
 const P_OP_ASSIGN = '(?:>>>|>>|<<|[|^&+*/%-])?='
 
 const P_EXP = '[\\s\\S]+'
 const P_ASSIGN = `(?<ident>${P_IDENT})\\s*${P_OP_ASSIGN}\\s*(?<val>${P_EXP})`
 const P_DECL = `(?<type>${P_TYPE})\\s+(?<ident>${P_IDENT})`
+
+const P_CONST = `(?<type>${P_TYPE}\\s+constant\\s+(?<ident>${P_IDENT}))\\s*=\\s*(?<val>${P_EXP})`
 
 const SRC = 'main.sol'
 const CON = 'Main'
@@ -38,6 +41,7 @@ function asi (ln) {
     return ln + ';'
 }
 
+const reConst = new RegExp(`^(?:${P_TYPE_ELEM}(?:${P_ARR})?)\\s+constant`)
 const reAssign = new RegExp(`${P_ASSIGN};$`)
 const reDecl = new RegExp(`${P_DECL};$`)
 const reIdent = new RegExp(`(?<ident>${P_IDENT_PATH});$`)
@@ -46,17 +50,21 @@ function sol (session, retType) {
     const isContract = retType.indexOf('contract ') === 0
     retType = isContract ? retType.substring('contract '.length) : retType
 
-    const cns = []
+    const cntrs = []
     const fns = []
+    const cnsts = []
     const exps = []
     let mayMutate = false
 
     for (let i = 0; i < session.length; i++) {
         let s = session[i]
         if (/^contract/.test(s)) {
-            cns.push(s)
+            cntrs.push(s)
         } else if (/^function/.test(s)) {
             fns.push(s)
+        } else if (reConst.test(s)) {
+            session[i] = s = asi(s)
+            cnsts.push(s)
         } else {
             if (/=\s*new/.test(s)) mayMutate = true
             session[i] = s = asi(s)
@@ -91,9 +99,10 @@ function sol (session, retType) {
     // SPDX-License-Identifier: UNLICENSED
     pragma solidity ^0.8.0;
 
-    ${cns.join('\n')}
+    ${cntrs.join('\n')}
 
     contract ${CON} {
+        ${cnsts.join('\n')}
         ${fns.join('\n')}
 
         function exec() public ${retSign} {
@@ -105,7 +114,7 @@ function sol (session, retType) {
 }
 
 const reMsg = new RegExp(`^Return argument type (contract ${P_IDENT}|[\\w\\[\\]]+\\s+(?:${P_LOC})?)`)
-const reRetType = new RegExp(`(?:${P_TYPE_ELEM})(?:\\[.*\\])?`)
+const reRetType = new RegExp(`(?:${P_TYPE_ELEM})(?:${P_ARR})?`)
 function getRetType (msg) {
     const matches = msg.match(reMsg)
     if (matches) {
