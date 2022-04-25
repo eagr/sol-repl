@@ -50,9 +50,9 @@ function sol (session, retType, mayMutate) {
     mayMutate = mayMutate || false
 
     const types = []
-    const contracts = []
-    const constants = []
     const enums = []
+    const constants = []
+    const contracts = []
     const fns = []
     const exps = []
 
@@ -61,13 +61,13 @@ function sol (session, retType, mayMutate) {
         if (reType.test(s)) {
             session[i] = s = asi(s)
             types.push(s)
-        } else if (/^contract/.test(s)) {
-            contracts.push(s)
+        } else if (/^enum/.test(s)) {
+            enums.push(s)
         } else if (reConst.test(s)) {
             session[i] = s = asi(s)
             constants.push(s)
-        } else if (/^enum/.test(s)) {
-            enums.push(s)
+        } else if (/^contract/.test(s)) {
+            contracts.push(s)
         } else if (/^function/.test(s)) {
             fns.push(s)
         } else {
@@ -102,11 +102,11 @@ function sol (session, retType, mayMutate) {
     pragma solidity ^0.8.0;
 
     ${types.join('\n')}
+    ${enums.join('\n')}
+    ${constants.join('\n')}
     ${contracts.join('\n')}
 
     contract ${CON} {
-        ${constants.join('\n')}
-        ${enums.join('\n')}
         ${fns.join('\n')}
 
         function exec() public ${retSign} {
