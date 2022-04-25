@@ -30,7 +30,8 @@ const P_EXP = '[\\s\\S]+'
 const P_ASSIGN = `(?<ident>${P_IDENT})\\s*${P_OP_ASSIGN}\\s*(?<val>${P_EXP})`
 const P_DECL = `(?<type>${P_TYPE})\\s+(?<ident>${P_IDENT})`
 
-const P_CONST = `(?<type>${P_TYPE}\\s+constant\\s+(?<ident>${P_IDENT}))\\s*=\\s*(?<val>${P_EXP})`
+const P_CONST = `(?<type>${P_TYPE})\\s+constant\\s+(?<ident>${P_IDENT})\\s*=\\s*(?<val>${P_EXP})`
+const P_ENUM = `enum\\s+(?<ident>${P_IDENT})\\s*{\\s*${P_IDENT}(?:\\s*,\\s*${P_IDENT})*\\s*}`
 
 const SRC = 'main.sol'
 const CON = 'Main'
@@ -49,6 +50,7 @@ function sol (session, retType, mayMutate) {
 
     const contracts = []
     const constants = []
+    const enums = []
     const fns = []
     const exps = []
 
@@ -59,6 +61,8 @@ function sol (session, retType, mayMutate) {
         } else if (reConst.test(s)) {
             session[i] = s = asi(s)
             constants.push(s)
+        } else if (/^enum/.test(s)) {
+            enums.push(s)
         } else if (/^function/.test(s)) {
             fns.push(s)
         } else {
@@ -96,6 +100,7 @@ function sol (session, retType, mayMutate) {
 
     contract ${CON} {
         ${constants.join('\n')}
+        ${enums.join('\n')}
         ${fns.join('\n')}
 
         function exec() public ${retSign} {
@@ -108,6 +113,7 @@ function sol (session, retType, mayMutate) {
 
 const reMsg = new RegExp(`^Return argument type ([\\s\\S]+) is not implicitly convertible to`)
 const reContract = new RegExp(`contract (${P_IDENT})`)
+const reEnum = new RegExp(`enum (${P_IDENT_PATH})`)
 const reRetType = new RegExp(`(?:${P_TYPE_ELEM})(?:${P_ARR})?`)
 function getRetType (msg) {
     const matches = msg.match(reMsg)
@@ -117,6 +123,8 @@ function getRetType (msg) {
         const cap = matches[1]
         if (cap.indexOf('contract') >= 0) {
             rt = cap.match(reContract)[1]
+        } else if (cap.indexOf('enum') >= 0) {
+            rt = cap.match(reEnum)[1]
         }
         rt = rt || cap.match(reRetType)[0]
 
