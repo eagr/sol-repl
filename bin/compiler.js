@@ -23,8 +23,10 @@ const P_TYPE_MAP = `mapping\\s*\\(\\s*(?:${P_TYPE_MAP_KEY})\\s*=>${P_TYPE_MAP_VA
 
 const P_TYPE = `(?:${P_TYPE_FUNC}|${P_TYPE_MAP}|${P_TYPE_ELEM}|${P_IDENT_PATH})(?:\\[.*\\])?`
 
+const P_OP_ASSIGN = '(?:>>>|>>|<<|[|^&+*/%-])?='
+
 const P_EXP = '[\\s\\S]+'
-const P_ASSIGN = `^(?:(?<type>${P_TYPE})\\s+)?(?<ident>${P_IDENT})\\s*=\\s*(?<val>${P_EXP})`
+const P_ASSIGN = `^(?:(?<type>${P_TYPE})\\s+)?(?<ident>${P_IDENT})\\s*${P_OP_ASSIGN}\\s*(?<val>${P_EXP})`
 const P_DECL = `^(?<type>${P_TYPE})\\s+(?<ident>${P_IDENT})`
 
 const SRC = 'main.sol'
