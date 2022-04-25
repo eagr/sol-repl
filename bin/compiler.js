@@ -44,12 +44,13 @@ function asi (ln) {
 const reConst = new RegExp(`^(?:${P_TYPE_ELEM}(?:${P_ARR})?)\\s+constant`)
 const reAssign = new RegExp(`${P_ASSIGN};$`)
 const reDecl = new RegExp(`${P_DECL};$`)
-function sol (session, retType) {
+function sol (session, retType, mayMutate) {
+    mayMutate = mayMutate || false
+
     const cntrs = []
     const fns = []
     const cnsts = []
     const exps = []
-    let mayMutate = false
 
     for (let i = 0; i < session.length; i++) {
         let s = session[i]
@@ -61,7 +62,6 @@ function sol (session, retType) {
             session[i] = s = asi(s)
             cnsts.push(s)
         } else {
-            if (/=\s*new/.test(s)) mayMutate = true
             session[i] = s = asi(s)
             exps.push(s)
         }
@@ -162,6 +162,15 @@ function compile (session) {
         retType = getRetType(error.message)
         if (retType) {
             src = sol(session, retType)
+            res = trial(src)
+        }
+    }
+
+    // trial for mutability modifier
+    if (res.errors && (error = firstError(res.errors))) {
+        if (error.message.indexOf('Function cannot be declared as view') >= 0) {
+            const MAY_MUTATE = true
+            src = sol(session, retType, MAY_MUTATE)
             res = trial(src)
         }
     }
