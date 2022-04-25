@@ -47,20 +47,20 @@ const reDecl = new RegExp(`${P_DECL};$`)
 function sol (session, retType, mayMutate) {
     mayMutate = mayMutate || false
 
-    const cntrs = []
+    const contracts = []
+    const constants = []
     const fns = []
-    const cnsts = []
     const exps = []
 
     for (let i = 0; i < session.length; i++) {
         let s = session[i]
         if (/^contract/.test(s)) {
-            cntrs.push(s)
-        } else if (/^function/.test(s)) {
-            fns.push(s)
+            contracts.push(s)
         } else if (reConst.test(s)) {
             session[i] = s = asi(s)
-            cnsts.push(s)
+            constants.push(s)
+        } else if (/^function/.test(s)) {
+            fns.push(s)
         } else {
             session[i] = s = asi(s)
             exps.push(s)
@@ -92,10 +92,10 @@ function sol (session, retType, mayMutate) {
     // SPDX-License-Identifier: UNLICENSED
     pragma solidity ^0.8.0;
 
-    ${cntrs.join('\n')}
+    ${contracts.join('\n')}
 
     contract ${CON} {
-        ${cnsts.join('\n')}
+        ${constants.join('\n')}
         ${fns.join('\n')}
 
         function exec() public ${retSign} {
