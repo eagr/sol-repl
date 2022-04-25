@@ -1,3 +1,5 @@
+const supportsBigInt = typeof BigInt === 'function' && typeof BigInt(0) === 'bigint'
+
 const PROMPT = '> '
 function prompt () {
     process.stdout.write(PROMPT)
@@ -25,15 +27,42 @@ function help () {
 }
 
 function toPrintable (x) {
-    if (x._isBigNumber) return x.toString()
+    function isStruct (x) {
+        if (Array.isArray(x)) {
+            const keys = Object.keys(x)
+            return keys.length === x.length * 2
+        }
+        return false
+    }
+
+    if (x._isBigNumber) {
+        const s = x.toString()
+        const n = Number(s)
+        return n >= Number.MIN_SAFE_INTEGER && n <= Number.MAX_SAFE_INTEGER
+            ? n
+            : supportsBigInt ? BigInt(s) : s
+    }
+
     if (typeof x === 'string') {
         if (x.indexOf('0x') === 0) return x
         return JSON.stringify(x)
     }
+
     if (Array.isArray(x)) {
+        if (isStruct(x)) {
+            const struct = {}
+            const keys = Object.keys(x).slice(x.length)
+            for (let i = 0; i < keys.length; i++) {
+                const key = keys[i]
+                struct[key] = toPrintable(x[key])
+            }
+            return struct
+        }
+
         x = x.map(toPrintable)
         return '[' + x.join(', ') + ']'
     }
+
     return x
 }
 
