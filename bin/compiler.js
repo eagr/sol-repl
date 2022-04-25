@@ -26,8 +26,8 @@ const P_TYPE = `(?:${P_TYPE_FUNC}|${P_TYPE_MAP}|${P_TYPE_ELEM}|${P_IDENT_PATH})(
 const P_OP_ASSIGN = '(?:>>>|>>|<<|[|^&+*/%-])?='
 
 const P_EXP = '[\\s\\S]+'
-const P_ASSIGN = `^(?:(?<type>${P_TYPE})\\s+)?(?<ident>${P_IDENT})\\s*${P_OP_ASSIGN}\\s*(?<val>${P_EXP})`
-const P_DECL = `^(?<type>${P_TYPE})\\s+(?<ident>${P_IDENT})`
+const P_ASSIGN = `(?<ident>${P_IDENT})\\s*${P_OP_ASSIGN}\\s*(?<val>${P_EXP})`
+const P_DECL = `(?<type>${P_TYPE})\\s+(?<ident>${P_IDENT})`
 
 const SRC = 'main.sol'
 const CON = 'Main'
@@ -67,16 +67,21 @@ function sol (session, retType) {
     let retSign = ''
 
     if (ret) {
-        let assign = null
-        let decl = null
-        if (assign = last.match(new RegExp(P_ASSIGN))) {
-            ret = `${assign.groups['ident']}`
-        } else if (decl = last.match(new RegExp(P_DECL))) {
-            ret = `${decl.groups['ident']}`
+        let match = null
+        let ident = ''
+
+        // order matters
+        if (match = last.match(new RegExp(`${P_ASSIGN};$`))) {
+            ident = `${match.groups['ident']}`
+        } else if (match = last.match(new RegExp(`${P_DECL};$`))) {
+            ident = `${match.groups['ident']}`
+        } else if (match = last.match(new RegExp(`(?<ident>${P_IDENT_PATH});$`))) {
+            ident = `${match.groups['ident']}`
         }
-        ret = 'return ' + asi(ret)
+
+        ret = ident ? `return ${asi(ident)}` : ''
         const mut = mayMutate ? '' : 'view'
-        retSign = mut + ' returns (' + retType + ')'
+        retSign = ret ? mut + ' returns (' + retType + ')' : ''
     }
 
     return `
