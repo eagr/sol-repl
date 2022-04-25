@@ -44,7 +44,6 @@ function asi (ln) {
 const reConst = new RegExp(`^(?:${P_TYPE_ELEM}(?:${P_ARR})?)\\s+constant`)
 const reAssign = new RegExp(`${P_ASSIGN};$`)
 const reDecl = new RegExp(`${P_DECL};$`)
-const reIdent = new RegExp(`(?<ident>${P_IDENT_PATH});$`)
 function sol (session, retType) {
     retType = retType || 'int'
     const isContract = retType.indexOf('contract ') === 0
@@ -86,11 +85,9 @@ function sol (session, retType) {
             ident = `${match.groups['ident']}`
         } else if (match = last.match(reDecl)) {
             ident = `${match.groups['ident']}`
-        } else if (match = last.match(reIdent)) {
-            ident = `${match.groups['ident']}`
         }
 
-        ret = ident ? `return ${asi(ident)}` : ''
+        ret = 'return ' + asi(ident ? ident : ret)
         const mut = mayMutate ? '' : 'view'
         retSign = ret ? mut + ' returns (' + retType + ')' : ''
     }
