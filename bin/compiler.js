@@ -37,7 +37,9 @@ const P_ARGS = `[\\s\\S]*`
 const P_CONTRACT_BODY = `.*`
 const P_INHERIT_SPEC = `${P_IDENT_PATH}(?:\\(${P_ARGS}\\))?`
 const P_INHERIT = `is\\s+(?:${P_INHERIT_SPEC}(?:\\s*,\\s*${P_INHERIT_SPEC})*)`
+
 const P_INTERFACE = `interface\\s+(?<ident>${P_IDENT})\\s+(?:${P_INHERIT})?\\s*{${P_CONTRACT_BODY}}`
+const P_LIBRARY = `library\\s+(?<ident>${P_IDENT})\\s*{${P_CONTRACT_BODY}}`
 
 const SRC = 'main.sol'
 const CON = 'Main'
@@ -60,7 +62,9 @@ function sol (session, retType, mayMutate) {
     const constants = []
     const structs = []
     const interfaces = []
+    const libraries = []
     const contracts = []
+    const usings = []
     const fns = []
     const exps = []
 
@@ -78,8 +82,13 @@ function sol (session, retType, mayMutate) {
             structs.push(s)
         } else if (/^interface/.test(s)) {
             interfaces.push(s)
+        } else if (/^library/.test(s)) {
+            libraries.push(s)
         } else if (/^contract/.test(s)) {
             contracts.push(s)
+        } else if (/^using/.test(s)) {
+            session[i] = s = asi(s)
+            usings.push(s)
         } else if (/^function/.test(s)) {
             fns.push(s)
         } else {
@@ -118,9 +127,11 @@ function sol (session, retType, mayMutate) {
     ${constants.join('\n')}
     ${structs.join('\n')}
     ${interfaces.join('\n')}
+    ${libraries.join('\n')}
     ${contracts.join('\n')}
 
     contract ${CON} {
+        ${usings.join('\n')}
         ${fns.join('\n')}
 
         function exec() public ${retSign} {
@@ -134,6 +145,7 @@ function sol (session, retType, mayMutate) {
 const reMsg = new RegExp(`^Return argument type ([\\s\\S]+) is not implicitly convertible to`)
 const reEnum = new RegExp(`enum (${P_IDENT_PATH})`)
 const reStruct = new RegExp(`struct (${P_IDENT_PATH})`)
+const reLibrary = new RegExp(`library (${P_IDENT})`)
 const reContract = new RegExp(`contract (${P_IDENT})`)
 const reRetType = new RegExp(`(?:${P_TYPE_ELEM})(?:${P_ARR})?`)
 function getRetType (msg) {
@@ -146,6 +158,8 @@ function getRetType (msg) {
             rt = cap.match(reEnum)[1]
         } else if (cap.indexOf('struct') >= 0) {
             rt = cap.match(reStruct)[1]
+        } else if (cap.indexOf('library') >= 0) {
+            rt = cap.match(reLibrary)[1]
         } else if (cap.indexOf('contract') >= 0) {
             rt = cap.match(reContract)[1]
         }
