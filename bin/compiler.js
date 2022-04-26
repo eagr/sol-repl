@@ -33,6 +33,12 @@ const P_DECL = `(?<type>${P_TYPE})\\s+(?<ident>${P_IDENT})`
 const P_CONST = `(?<type>${P_TYPE})\\s+constant\\s+(?<ident>${P_IDENT})\\s*=\\s*(?<val>${P_EXP})`
 const P_ENUM = `enum\\s+(?<ident>${P_IDENT})\\s*{\\s*${P_IDENT}(?:\\s*,\\s*${P_IDENT})*\\s*}`
 
+const P_ARGS = `[\\s\\S]*`
+const P_CONTRACT_BODY = `.*`
+const P_INHERIT_SPEC = `${P_IDENT_PATH}(?:\\(${P_ARGS}\\))?`
+const P_INHERIT = `is\\s+(?:${P_INHERIT_SPEC}(?:\\s*,\\s*${P_INHERIT_SPEC})*)`
+const P_INTERFACE = `interface\\s+(?<ident>${P_IDENT})\\s+(?:${P_INHERIT})?\\s*{${P_CONTRACT_BODY}}`
+
 const SRC = 'main.sol'
 const CON = 'Main'
 
@@ -53,6 +59,7 @@ function sol (session, retType, mayMutate) {
     const enums = []
     const constants = []
     const structs = []
+    const interfaces = []
     const contracts = []
     const fns = []
     const exps = []
@@ -69,6 +76,8 @@ function sol (session, retType, mayMutate) {
             constants.push(s)
         } else if (/^struct/.test(s)) {
             structs.push(s)
+        } else if (/^interface/.test(s)) {
+            interfaces.push(s)
         } else if (/^contract/.test(s)) {
             contracts.push(s)
         } else if (/^function/.test(s)) {
@@ -108,6 +117,7 @@ function sol (session, retType, mayMutate) {
     ${enums.join('\n')}
     ${constants.join('\n')}
     ${structs.join('\n')}
+    ${interfaces.join('\n')}
     ${contracts.join('\n')}
 
     contract ${CON} {
