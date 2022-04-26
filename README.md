@@ -6,14 +6,14 @@ a REPL to provide instant feedback for Solidity snippets
 
 * language
   * [x] constant
-  * [ ] contract
+  * [x] contract
   * [x] enum
   * [x] function
   * [ ] import
   * [ ] interface
   * [ ] library
-  * [ ] struct
-  * [ ] type
+  * [x] struct
+  * [x] type
 * REPL
   * [x] Node-like REPL interactions
   * [x] cursor/delete shortcuts
