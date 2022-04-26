@@ -84,7 +84,7 @@ function sol (session, retType, mayMutate) {
             interfaces.push(s)
         } else if (/^library/.test(s)) {
             libraries.push(s)
-        } else if (/^contract/.test(s)) {
+        } else if (/^(abstract\s+)?contract/.test(s)) {
             contracts.push(s)
         } else if (/^using/.test(s)) {
             session[i] = s = asi(s)
