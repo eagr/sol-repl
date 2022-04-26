@@ -10,8 +10,8 @@ a REPL to provide instant feedback for Solidity snippets
   * [x] enum
   * [x] function
   * [ ] import
-  * [ ] interface
-  * [ ] library
+  * [x] interface
+  * [x] library
   * [x] struct
   * [x] type
 * REPL
