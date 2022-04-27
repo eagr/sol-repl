@@ -2,6 +2,8 @@
 
 a REPL to provide instant feedback for Solidity snippets
 
+[Any bug reports or feature requests](https://github.com/eagr/sol-repl/issues/new) are appreciated.
+
 ## Features
 
 * language
