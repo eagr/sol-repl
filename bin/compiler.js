@@ -141,11 +141,11 @@ function sol (session, retType, mayMutate) {
         ${declarations.join('\n')}
         ${fns.join('\n')}
 
-        function wingman() public {
+        function __wingman__() public {
             ${exps.join('\n')}
         }
 
-        function exec() public ${retSign} {
+        function __exec__() public ${retSign} {
             ${ret}
         }
     }`
