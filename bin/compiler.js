@@ -29,8 +29,8 @@ const P_OP_ASSIGN = '(?:>>>|>>|<<|[|^&+*/%-])?='
 const P_EXP = '[\\s\\S]+'
 const P_ASSIGN = `(?<ident>${P_IDENT})\\s*${P_OP_ASSIGN}\\s*(?<val>${P_EXP})`
 const P_DECL = `(?<type>${P_TYPE})\\s+(?<ident>${P_IDENT})`
+const P_CONST = `(?<type>(?:${P_TYPE_ELEM})(?:${P_ARR})?)\\s+constant\\s+(?<ident>${P_IDENT})\\s*=\\s*(?<val>${P_EXP})`
 
-const P_CONST = `(?<type>${P_TYPE})\\s+constant\\s+(?<ident>${P_IDENT})\\s*=\\s*(?<val>${P_EXP})`
 const P_ENUM = `enum\\s+(?<ident>${P_IDENT})\\s*{\\s*${P_IDENT}(?:\\s*,\\s*${P_IDENT})*\\s*}`
 
 const P_ARGS = `[\\s\\S]*`
@@ -51,9 +51,9 @@ function asi (ln) {
 }
 
 const reType = new RegExp(`^type\\s+${P_IDENT}\\s+is\\s+(?:${P_TYPE_ELEM})`)
-const reConst = new RegExp(`^(?:${P_TYPE_ELEM}(?:${P_ARR})?)\\s+constant`)
+const reConst = new RegExp(`^${P_CONST}`)
 const reAssign = new RegExp(`${P_ASSIGN};$`)
-const reDecl = new RegExp(`${P_DECL};$`)
+const reDecl = new RegExp(`^${P_DECL}`)
 function sol (session, retType, mayMutate) {
     mayMutate = mayMutate || false
 
@@ -65,6 +65,7 @@ function sol (session, retType, mayMutate) {
     const libraries = []
     const contracts = []
     const usings = []
+    const declarations = []
     const fns = []
     const exps = []
 
@@ -89,6 +90,9 @@ function sol (session, retType, mayMutate) {
         } else if (/^using/.test(s)) {
             session[i] = s = asi(s)
             usings.push(s)
+        } else if (reDecl.test(s)) {
+            session[i] = s = asi(s)
+            declarations.push(s)
         } else if (/^function/.test(s)) {
             fns.push(s)
         } else {
@@ -98,8 +102,8 @@ function sol (session, retType, mayMutate) {
     }
 
     const last = session[session.length - 1] || ''
-    const endsWithExp = exps.indexOf(last) >= 0
-    let ret = endsWithExp ? last : ''
+    const returnable = exps.indexOf(last) >= 0 || declarations.indexOf(last) >= 0 || constants.indexOf(last) >= 0
+    let ret = returnable ? last : ''
     let retSign = ''
 
     if (ret) {
@@ -107,9 +111,11 @@ function sol (session, retType, mayMutate) {
         let ident = ''
 
         // order matters
-        if (match = last.match(reAssign)) {
+        if (match = ret.match(reConst)) {
             ident = `${match.groups['ident']}`
-        } else if (match = last.match(reDecl)) {
+        } else if (match = ret.match(reAssign)) {
+            ident = `${match.groups['ident']}`
+        } else if (match = ret.match(reDecl)) {
             ident = `${match.groups['ident']}`
         }
 
@@ -132,11 +138,14 @@ function sol (session, retType, mayMutate) {
 
     contract ${CON} {
         ${usings.join('\n')}
+        ${declarations.join('\n')}
         ${fns.join('\n')}
 
-        function exec() public ${retSign} {
+        function wingman() public {
             ${exps.join('\n')}
+        }
 
+        function exec() public ${retSign} {
             ${ret}
         }
     }`

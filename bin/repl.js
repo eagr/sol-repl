@@ -69,6 +69,7 @@ async function exec (inp) {
             const factory = ContractFactory.fromSolidity(out, signer)
             const snippets = await factory.deploy()
             await snippets.deployTransaction.wait()
+            await snippets.wingman()
             const rawRes = await snippets.exec()
 
             if (typeof rawRes.wait === 'function') return
