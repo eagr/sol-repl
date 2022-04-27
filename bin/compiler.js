@@ -111,17 +111,17 @@ function sol (session, retType, mayMutate) {
         let ident = ''
 
         // order matters
-        if (match = ret.match(reConst)) {
-            ident = `${match.groups['ident']}`
-        } else if (match = ret.match(reAssign)) {
-            ident = `${match.groups['ident']}`
-        } else if (match = ret.match(reDecl)) {
+        if (
+            (match = ret.match(reConst)) ||
+            (match = ret.match(reAssign)) ||
+            (match = ret.match(reDecl))
+        ) {
             ident = `${match.groups['ident']}`
         }
 
         ret = 'return ' + asi(ident ? ident : ret)
-        const mut = mayMutate ? '' : 'view'
-        retSign = ret ? mut + ' returns (' + retType + ')' : ''
+        const mut = mayMutate ? '' : 'view '
+        retSign = mut + 'returns (' + retType + ')'
     }
 
     return `
