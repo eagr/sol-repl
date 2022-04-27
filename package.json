@@ -6,7 +6,7 @@
     "bin"
   ],
   "bin": {
-    "sol": "./bin/index.js"
+    "sol": "./bin/repl.js"
   },
   "scripts": {},
   "repository": {

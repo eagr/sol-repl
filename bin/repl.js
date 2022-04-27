@@ -1,104 +1,245 @@
-const supportsBigInt = typeof BigInt === 'function' && typeof BigInt(0) === 'bigint'
+#!/usr/bin/env node
 
-const PROMPT = '> '
-function prompt () {
-    process.stdout.write(PROMPT)
+const pkg = require('../package.json')
+const ver = pkg.version
+const solVer = pkg.dependencies.solc
+
+const option = process.argv.slice(2)[0]
+if (option === '--version' || option === '-v') {
+    console.log(ver)
+    process.exit()
 }
 
-function setLine (ln) {
-    const stdout = process.stdout
-    stdout.cursorTo(PROMPT.length)
-    stdout.clearLine(1)
-    stdout.write(ln)
-}
+const { ethers } = require('ethers')
+const ganache = require('ganache')
+const prettier = require('prettier')
+const { compile } = require('./compiler')
+const { prompt, setLine, help, toDisplay, lastWordBound, prevWordStart, nextWordEnd } = require('./util')
 
-function help () {
-    const info = {
-        '.exit': 'Exit the REPL',
-        '.help': 'Print this message',
-        '.session': 'Print current session',
-    }
+ethers.utils.Logger.setLogLevel('OFF')
+const { providers, ContractFactory } = ethers
+const provider = new providers.Web3Provider(ganache.provider({
+    logging: { quiet: true },
+}))
+const signer = provider.getSigner()
 
-    const commands = Object.keys(info)
-    for (let i = 0; i < commands.length; i++) {
-        const cmd = commands[i]
-        console.log(cmd.padEnd(12) + info[cmd])
-    }
-}
+const session = []
+const book = []
+let src = ''
+let invalidSrc = ''
 
-function toDisplay (x) {
-    function isStruct (x) {
-        if (Array.isArray(x)) {
-            const keys = Object.keys(x)
-            return keys.length === x.length * 2
+async function exec (inp) {
+    if (/^\s*$/.test(inp)) return
+    book.push(inp)
+
+    inp = inp.trim()
+    if (/^\.[A-Za-z]+$/.test(inp)) {
+        inp = inp.toLowerCase()
+        switch (inp) {
+            case '.exit':
+                process.exit()
+            case '.help':
+                help()
+                break
+            case '.session':
+                console.log(prettier.format(src, {
+                    filepath: '*.sol',
+                    tabWidth: 2,
+                    useTabs: false,
+                    explicitTypes: 'preserve',
+                }))
+                break
+            case '.invalid':
+                console.log(invalidSrc)
+                break
+            default:
+                console.log('Invalid REPL command')
+                break
         }
-        return false
-    }
+    } else {
+        session.push(inp)
+        const comp = compile(session.slice())
+        const [err, out] = comp.res
+        if (err) {
+            invalidSrc = comp.src
+            session.pop()
+            console.error(err.formattedMessage)
+        } else {
+            src = comp.src
+            const factory = ContractFactory.fromSolidity(out, signer)
+            const snippets = await factory.deploy()
+            await snippets.deployTransaction.wait()
+            const rawRes = await snippets.exec()
 
-    if (x._isBigNumber) {
-        const s = x.toString()
-        const n = Number(s)
-        return n >= Number.MIN_SAFE_INTEGER && n <= Number.MAX_SAFE_INTEGER
-            ? n
-            : supportsBigInt ? BigInt(s) : s
+            if (typeof rawRes.wait === 'function') return
+            console.log(toDisplay(rawRes))
+        }
     }
+}
 
-    if (typeof x === 'string') {
-        if (x.indexOf('0x') === 0) return x
-        return JSON.stringify(x)
-    }
+const { stdin, stdout } = process
+stdin.setRawMode(true)
+stdin.setEncoding('utf8')
+stdin.resume()
 
-    if (Array.isArray(x)) {
-        if (isStruct(x)) {
-            const struct = {}
-            const keys = Object.keys(x).slice(x.length)
-            for (let i = 0; i < keys.length; i++) {
-                const key = keys[i]
-                struct[key] = toDisplay(x[key])
-            }
-            return struct
+const CTRL_C = '\u0003'
+const CTRL_D = '\u0004'
+const CTRL_U = '\u0015'
+const CTRL_W = '\u0017'
+const ALT_DEL = CTRL_W
+const ALT_LEFT = '\u001B\u0062'
+const ALT_RIGHT = '\u001B\u0066'
+const FN_LEFT = '\u001B\u005B\u0048'
+const FN_RIGHT = '\u001B\u005B\u0046'
+
+const RET = '\u000D'
+const DEL = '\u007F'
+const UP = '\u001B\u005B\u0041'
+const DOWN = '\u001B\u005B\u0042'
+const RIGHT = '\u001B\u005B\u0043'
+const LEFT = '\u001B\u005B\u0044'
+
+let signaledExit = false
+let input = ''
+let cursor = 0
+let history = []
+let historyPtr = 0
+
+stdin.on('data', async (key) => {
+
+    // interrupt
+
+    if (key === CTRL_D) process.exit()
+
+    if (key === CTRL_C) {
+        if (signaledExit) process.exit()
+        if (input === '') {
+            console.log('\n(To exit, press Ctrl+C again or Ctrl+D or type .exit)')
+            signaledExit = true
+            return prompt()
         }
 
-        x = x.map(toDisplay)
-        return '[' + x.join(', ') + ']'
+        input = ''
+        cursor = 0
+        stdout.write('\n')
+        return prompt()
+    }
+    signaledExit = false
+
+    // cursor
+
+    function cursorTo (buf, cur, inp) {
+        switch (inp) {
+            case LEFT: return Math.max(0, cur - 1)
+            case RIGHT: return Math.min(cur + 1, buf.length)
+            case ALT_LEFT: return prevWordStart(buf, cur)
+            case ALT_RIGHT: return nextWordEnd(buf, cur)
+            case FN_LEFT: return 0
+            case FN_RIGHT: return buf.length
+        }
     }
 
-    return x
-}
-
-function lastWordBound (str, pos) {
-    const inWord = /\w/.test(str[pos - 1])
-    const pat = inWord ? /\W/ : /\w/
-    for (let i = pos - 1; i >= 0; i--) {
-        if (pat.test(str[i])) return i + 1
+    if (
+        key === LEFT || key === RIGHT ||
+        key === ALT_LEFT || key === ALT_RIGHT ||
+        key === FN_LEFT || key === FN_RIGHT
+    ) {
+        cursor = cursorTo(input, cursor, key)
+        return stdout.cursorTo(cursor + 2)
     }
-    return 0
-}
 
-function prevWordStart (str, pos) {
-    let prev = ''
-    for (let i = pos - 1; i >= 0; i--) {
-        if (/\s/.test(str[i]) && /\S/.test(prev)) return i + 1
-        prev = str[i]
+    // delete
+
+    if (key === DEL) {
+        input = input.slice(0, Math.max(0, cursor - 1)) + input.slice(cursor)
+        cursor = Math.max(0, cursor - 1)
+        if (cursor === input.length) {
+            stdout.cursorTo(cursor + 2)
+            stdout.clearLine(1)
+        } else {
+            setLine(input)
+            stdout.cursorTo(cursor + 2)
+        }
+
+        history = input ? [] : book.slice(0)
+        historyPtr = history.length
+        return
     }
-    return 0
-}
 
-function nextWordEnd (str, pos) {
-    let prev = ''
-    for (let i = pos; i <= str.length; i++) {
-        if (/\s/.test(str[i]) && /\S/.test(prev)) return i
-        prev = str[i]
+    if (key === ALT_DEL) {
+        const bound = lastWordBound(input, cursor)
+        input = input.slice(0, bound) + input.slice(cursor)
+        cursor = bound
+        setLine(input)
+        stdout.cursorTo(cursor + 2)
+
+        history = input ? [] : book.slice(0)
+        historyPtr = history.length
+        return
     }
-    return str.length
-}
 
-module.exports = {
-    prompt,
-    setLine,
-    help,
-    toDisplay,
-    lastWordBound,
-    prevWordStart,
-    nextWordEnd,
-}
+    if (key === CTRL_U) {
+        input = input.slice(cursor)
+        cursor = 0
+        setLine(input)
+        stdout.cursorTo(cursor + 2)
+
+        history = input ? [] : book.slice(0)
+        historyPtr = history.length
+        return
+    }
+
+    // history
+
+    if (key === UP) {
+        if (historyPtr === 0) return
+
+        historyPtr = Math.max(0, historyPtr - 1)
+        input = history[historyPtr] || ''
+        cursor = input.length
+        return setLine(input)
+    }
+
+    if (key === DOWN) {
+        if (historyPtr === history.length) return
+
+        historyPtr = Math.min(historyPtr + 1, history.length)
+        input = history[historyPtr] || ''
+        cursor = input.length
+        return setLine(input)
+    }
+
+    // input
+
+    if (key === RET) {
+        stdout.write('\n')
+        await exec(input)
+
+        input = ''
+        cursor = 0
+        history = book.slice(0)
+        historyPtr = book.length
+        return prompt()
+    }
+
+    input = input.slice(0, cursor) + key + input.slice(cursor)
+    cursor = cursor + 1
+    if (cursor === input.length) {
+        stdout.write(key)
+    } else {
+        setLine(input)
+        stdout.cursorTo(cursor + 2)
+    }
+
+    history.length = 0
+    for (let i = 0; i < book.length; i++) {
+        if (book[i].indexOf(input) === 0) {
+            history.push(book[i])
+        }
+    }
+    historyPtr = history.length
+})
+
+console.log(`Welcome to Solidity v${solVer}!`)
+console.log('Type ".help" for more information.')
+prompt()
