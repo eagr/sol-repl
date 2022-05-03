@@ -1,4 +1,6 @@
 const solc = require('solc')
+const fs = require('fs')
+const path = require('path')
 
 const P_BYTES = 'bytes(?:3[0-2]|2\\d|1\\d|[1-9])?'
 const P_UINT = 'uint(?:256|248|240|232|224|216|208|200|192|184|176|168|160|152|144|136|128|120|112|104|96|88|80|72|64|56|48|40|32|24|16|8)?'
@@ -57,6 +59,7 @@ const reDecl = new RegExp(`^${P_DECL}`)
 function sol (session, retType, mayMutate) {
     mayMutate = mayMutate || false
 
+    const imports = []
     const types = []
     const enums = []
     const constants = []
@@ -71,7 +74,10 @@ function sol (session, retType, mayMutate) {
 
     for (let i = 0; i < session.length; i++) {
         let s = session[i]
-        if (reType.test(s)) {
+        if (/^import/.test(s)) {
+            session[i] = s = asi(s)
+            imports.push(s)
+        } else if (reType.test(s)) {
             session[i] = s = asi(s)
             types.push(s)
         } else if (/^enum/.test(s)) {
@@ -127,6 +133,8 @@ function sol (session, retType, mayMutate) {
     return `
     // SPDX-License-Identifier: UNLICENSED
     pragma solidity ^0.8.0;
+
+    ${imports.join('\n')}
 
     ${types.join('\n')}
     ${enums.join('\n')}
@@ -184,6 +192,27 @@ function getRetType (msg) {
 }
 
 function compile (session) {
+    function importCallback (srcPath) {
+        const paths = [
+            // order matters
+            path.join(process.env.PWD, srcPath),
+            path.join(process.env.PWD, 'node_modules', srcPath),
+        ]
+
+        for (let i = 0; i < paths.length; i++) {
+            const p = paths[i]
+            try {
+                if (fs.existsSync(p)) {
+                    const srcStr = fs.readFileSync(p, 'utf8')
+                    return { contents: srcStr }
+                }
+            } catch (err) {
+                console.error(err)
+            }
+        }
+        return { error: `File not found in:\n${paths.join('\n')}` }
+    }
+
     function trial (src) {
         const inp = JSON.stringify({
             language: 'Solidity',
@@ -194,7 +223,7 @@ function compile (session) {
                 },
             },
         })
-        const out = JSON.parse(solc.compile(inp))
+        const out = JSON.parse(solc.compile(inp, { import: importCallback }))
         return out
     }
 
