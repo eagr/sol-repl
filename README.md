@@ -11,7 +11,7 @@ a REPL to provide instant feedback for Solidity snippets
   * [x] contract
   * [x] enum
   * [x] function
-  * [ ] import
+  * [x] import
   * [x] interface
   * [x] library
   * [x] struct
