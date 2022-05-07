@@ -1,6 +1,5 @@
 const solc = require('solc')
-const fs = require('fs')
-const path = require('path')
+const { importCallback } = require('./util')
 
 const P_BYTES = 'bytes(?:3[0-2]|2\\d|1\\d|[1-9])?'
 const P_UINT = 'uint(?:256|248|240|232|224|216|208|200|192|184|176|168|160|152|144|136|128|120|112|104|96|88|80|72|64|56|48|40|32|24|16|8)?'
@@ -192,27 +191,6 @@ function getRetType (msg) {
 }
 
 function compile (session) {
-    function importCallback (srcPath) {
-        const paths = [
-            // order matters
-            path.join(process.env.PWD, srcPath),
-            path.join(process.env.PWD, 'node_modules', srcPath),
-        ]
-
-        for (let i = 0; i < paths.length; i++) {
-            const p = paths[i]
-            try {
-                if (fs.existsSync(p)) {
-                    const srcStr = fs.readFileSync(p, 'utf8')
-                    return { contents: srcStr }
-                }
-            } catch (err) {
-                console.error(err)
-            }
-        }
-        return { error: `File not found in:\n${paths.join('\n')}` }
-    }
-
     function trial (src) {
         const inp = JSON.stringify({
             language: 'Solidity',

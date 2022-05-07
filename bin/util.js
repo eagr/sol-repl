@@ -1,3 +1,6 @@
+const fs = require('fs')
+const path = require('path')
+
 const supportsBigInt = typeof BigInt === 'function' && typeof BigInt(0) === 'bigint'
 
 const PROMPT = '> '
@@ -93,6 +96,27 @@ function nextWordEnd (str, pos) {
     return str.length
 }
 
+function importCallback (srcPath) {
+    const paths = [
+        // order matters
+        path.join(process.env.PWD, srcPath),
+        path.join(process.env.PWD, 'node_modules', srcPath),
+    ]
+
+    for (let i = 0; i < paths.length; i++) {
+        const p = paths[i]
+        try {
+            if (fs.existsSync(p)) {
+                const src = fs.readFileSync(p, 'utf8')
+                return { contents: src }
+            }
+        } catch (err) {
+            console.error(err)
+        }
+    }
+    return { error: `File not found in:\n${paths.join('\n')}` }
+}
+
 module.exports = {
     prompt,
     setLine,
@@ -101,4 +125,5 @@ module.exports = {
     lastWordBound,
     prevWordStart,
     nextWordEnd,
+    importCallback,
 }

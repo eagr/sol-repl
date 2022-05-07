@@ -7,7 +7,39 @@ const solVer = pkg.dependencies.solc
 const option = process.argv.slice(2)[0]
 if (option === '--version' || option === '-v') {
     console.log(ver)
-    process.exit()
+    process.exit(0)
+}
+
+const fs = require('fs')
+const path = require('path')
+const rePath = new RegExp(`(?:[^\\${path.sep}]+\\${path.sep})*[^\\${path.sep}]+\\.sol$`)
+const reName = new RegExp(`(?<name>[^\\${path.sep}]+\\.sol)$`)
+
+if (option && rePath.test(option)) {
+    const srcPath = option
+
+    try {
+        const src = fs.readFileSync(srcPath, 'utf8')
+
+        const solc = require('solc')
+        const { importCallback } = require('./util')
+
+        const srcName = srcPath.match(reName).groups['name']
+        const inp = JSON.stringify({
+            language: 'Solidity',
+            sources: { [srcName]: { content: src } },
+            settings: {
+                outputSelection: {
+                    '*': { '*': ['*'] },
+                },
+            },
+        })
+        const out = JSON.parse(solc.compile(inp, { import: importCallback }))
+        console.log(out)
+    } catch (err) {
+        console.error(err)
+    }
+    process.exit(0)
 }
 
 const { ethers } = require('ethers')
